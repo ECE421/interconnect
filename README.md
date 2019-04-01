@@ -1,4 +1,4 @@
-# disconnect-4-hahaha
+# Interconnect4
 
 [![Build Status](https://travis-ci.com/ECE421/disconnect-4-hahaha.svg?branch=master)](https://travis-ci.com/ECE421/disconnect-4-hahaha)
 
