@@ -45,7 +45,11 @@ class AppModel
       mode: PLAYER_PLAYER,
       phase: MENU,
       board_data: Array.new(6) { Array.new(7, 0) },
-      result: NO_RESULT_YET
+      result: NO_RESULT_YET,
+      settings: {
+        player_1_colour: '#FF00FF',
+        player_2_colour: '#FFFF00'
+      }
     }
 
     return if presenter.nil?
