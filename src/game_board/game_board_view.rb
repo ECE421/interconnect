@@ -76,6 +76,19 @@ class GameBoardView
       end
     end
 
+    if state[:phase] == AppModel::GAME_OVER
+      winner = state[:result]
+      title = winner == AppModel::TIE ? Gtk::Label.new("It's a tie!") : Gtk::Label.new("Player #{winner} wins!")
+      @layout.put(title, 0, 700)
+
+      main_menu_button = Gtk::Button.new(label: 'Back to Main Menu')
+      main_menu_button.signal_connect('clicked') do |_, _|
+        changed
+        notify_observers('main_menu_clicked')
+      end
+      @layout.put(main_menu_button, 0, 800)
+    end
+
     @window.show_all
   end
 end

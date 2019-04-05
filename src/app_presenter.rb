@@ -1,9 +1,6 @@
 require_relative 'game_board/cli_game_board_view'
 require_relative 'game_board/game_board_presenter'
 require_relative 'game_board/game_board_view'
-require_relative 'game_over/cli_game_over_view'
-require_relative 'game_over/game_over_presenter'
-require_relative 'game_over/game_over_view'
 require_relative 'main_menu/cli_main_menu_view'
 require_relative 'main_menu/main_menu_presenter'
 require_relative 'main_menu/main_menu_view'
@@ -40,14 +37,10 @@ class AppPresenter
       @main_menu_view = MainMenuView.new(@window)
 
       @game_board_view = GameBoardView.new(@window)
-
-      @game_over_view = GameOverView.new(@window)
     elsif interface == AppModel::CLI
       @main_menu_view = CLIMainMenuView.new
 
       @game_board_view = CLIGameBoardView.new
-
-      @game_over_view = CLIGameOverView.new
     end
 
     @main_menu_presenter = MainMenuPresenter.new(@model)
@@ -55,9 +48,6 @@ class AppPresenter
 
     @game_board_presenter = GameBoardPresenter.new(@model)
     @game_board_view.add_observer(@game_board_presenter)
-
-    @game_over_presenter = GameOverPresenter.new(@model)
-    @game_over_view.add_observer(@game_over_presenter)
   end
 
   def turn_updated(state)
@@ -69,11 +59,9 @@ class AppPresenter
 
     if state[:phase] == AppModel::MENU
       @main_menu_view.draw(state[:type], state[:mode])
-    elsif state[:phase] == AppModel::IN_PROGRESS
+    elsif state[:phase] == AppModel::IN_PROGRESS || state[:phase] == AppModel::GAME_OVER
       @game_board_view.bind_layout
       @game_board_view.draw(state)
-    elsif state[:phase] == AppModel::GAME_OVER
-      @game_over_view.draw(state[:result])
     end
   end
 
