@@ -15,13 +15,10 @@ class GameBoardView
 
     @player_1_token = Gtk::CssProvider.new
     # NOTE: Loading doesn't work with template strings
-    player_1_data = 'button {background-image: image(' + settings[:player_1_colour] + ');}'
-    @player_1_token.load(data: player_1_data)
+    @player_1_token.load(data: "button {background-image: image(#{settings[:player_1_colour]});}")
 
     @player_2_token = Gtk::CssProvider.new
-    # NOTE: Loading doesn't work with template strings
-    player_2_data = 'button {background-image: image(' + settings[:player_2_colour] + ');}'
-    @player_2_token.load(data: player_2_data)
+    @player_2_token.load(data: "button {background-image: image(#{settings[:player_2_colour]});}")
 
     @t_token = Gtk::CssProvider.new
     @t_token.load(data: 'button {background-image: url("./src/game_board/t.png");}')
@@ -32,8 +29,12 @@ class GameBoardView
     @cells = Array.new(settings[:board_rows]) { Array.new(settings[:board_columns], nil) }
     @layout = Gtk::Fixed.new
 
+    @turn_indicator = Gtk::Label.new
+    @turn_indicator.set_markup("<span foreground='#{settings[:player_1_colour]}'>Player 1's Turn:</span>")
+    @layout.put(@turn_indicator, 0, 0)
+
     cell_grid = Gtk::Grid.new
-    @layout.put(cell_grid, 0, 0)
+    @layout.put(cell_grid, 0, 40)
 
     (0..(settings[:board_columns] - 1)).each do |col|
       (0..(settings[:board_rows] - 1)).each do |row|
@@ -45,7 +46,7 @@ class GameBoardView
     end
 
     column_grid = Gtk::Grid.new
-    @layout.put(column_grid, 0, 0)
+    @layout.put(column_grid, 0, 40)
 
     (0..(settings[:board_columns] - 1)).each do |column_index|
       column = Gtk::Button.new
@@ -64,6 +65,12 @@ class GameBoardView
   end
 
   def draw(state)
+    if state[:turn] == AppModel::PLAYER_1_TURN
+      @turn_indicator.set_markup("<span foreground='#{state[:settings][:player_1_colour]}'>Player 1's Turn:</span>")
+    elsif state[:turn] == AppModel::PLAYER_2_TURN
+      @turn_indicator.set_markup("<span foreground='#{state[:settings][:player_2_colour]}'>Player 2's Turn:</span>")
+    end
+
     (0..(state[:settings][:board_columns] - 1)).each do |col|
       (0..(state[:settings][:board_rows] - 1)).each do |row|
         if (state[:board_data][row][col]).zero?
@@ -80,17 +87,18 @@ class GameBoardView
       end
     end
 
+    # TODO: Need to remove this from layout when a new game starts
     if state[:phase] == AppModel::GAME_OVER
       winner = state[:result]
       title = winner == AppModel::TIE ? Gtk::Label.new("It's a tie!") : Gtk::Label.new("Player #{winner} wins!")
-      @layout.put(title, 0, 100 * state[:settings][:board_rows])
+      @layout.put(title, 0, 100 * state[:settings][:board_rows] + 60)
 
       main_menu_button = Gtk::Button.new(label: 'Back to Main Menu')
       main_menu_button.signal_connect('clicked') do |_, _|
         changed
-        notify_observers('main_menu_clicked')
+        notify_observers('main_menu_clicked', 0)
       end
-      @layout.put(main_menu_button, 0, 100 * state[:settings][:board_rows] + 20)
+      @layout.put(main_menu_button, 0, 100 * state[:settings][:board_rows] + 100)
     end
 
     @window.show_all
