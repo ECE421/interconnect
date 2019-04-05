@@ -139,6 +139,8 @@ class AppModel
   end
 
   def place_token(column_index)
+    return if @state[:phase] == GAME_OVER
+
     token_played = board_place_token(column_index)
 
     result = game_result
