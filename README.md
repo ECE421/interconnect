@@ -1,6 +1,18 @@
 # Interconnect4
 
-[![Build Status](https://travis-ci.com/ECE421/disconnect-4-hahaha.svg?branch=master)](https://travis-ci.com/ECE421/disconnect-4-hahaha)
+## Usage
+
+### GUI
+In root directory:
+```
+ruby assignment4_main.rb
+```
+
+### CLI
+In root directory:
+```
+ruby assignment4_main.rb cli
+```
 
 ## Connect 4
 The classic, non-interrupted, quadra-connected, grid-based elements game

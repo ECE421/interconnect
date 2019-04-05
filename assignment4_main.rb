@@ -5,7 +5,9 @@ require_relative 'src/app_presenter'
 # GUI Version
 app = Gtk::Application.new('disconnect.four.hahaha', :flags_none)
 model = AppModel.new(app, AppPresenter.new, AppModel::GUI)
-puts(model.app.run([$PROGRAM_NAME] + ARGV))
+if ARGV.include?('cli')
+  AppModel.new(nil, AppPresenter.new, AppModel::CLI) # CLI Version
+else
+  puts(model.app.run([$PROGRAM_NAME] + ARGV)) # GUI Version
+end
 
-# CLI Version
-# AppModel.new(nil, AppPresenter.new, AppModel::CLI)
