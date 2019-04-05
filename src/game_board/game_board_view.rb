@@ -57,6 +57,13 @@ class GameBoardView
       end
       column_grid.attach(column, column_index, 0, 1, 1)
     end
+
+    @winner = Gtk::Label.new
+    @main_menu_button = Gtk::Button.new(label: 'Back to Main Menu')
+    @main_menu_button.signal_connect('clicked') do |_, _|
+      changed
+      notify_observers('main_menu_clicked')
+    end
   end
 
   def bind_layout
@@ -86,18 +93,14 @@ class GameBoardView
       end
     end
 
-    # TODO: Need to remove this from layout when a new game starts
     if state[:phase] == AppModel::GAME_OVER
       winner = state[:result]
-      title = winner == AppModel::TIE ? Gtk::Label.new("It's a tie!") : Gtk::Label.new("Player #{winner} wins!")
-      @layout.put(title, 0, 100 * state[:settings][:board_rows] + 60)
-
-      main_menu_button = Gtk::Button.new(label: 'Back to Main Menu')
-      main_menu_button.signal_connect('clicked') do |_, _|
-        changed
-        notify_observers('main_menu_clicked')
-      end
-      @layout.put(main_menu_button, 0, 100 * state[:settings][:board_rows] + 100)
+      @winner.set_markup(winner == AppModel::TIE ? "<span>It's a tie!</span>" : "<span>Player #{winner} wins!</span>")
+      @layout.put(@winner, 0, 100 * state[:settings][:board_rows] + 60)
+      @layout.put(@main_menu_button, 0, 100 * state[:settings][:board_rows] + 100)
+    else
+      @layout.remove(@winner)
+      @layout.remove(@main_menu_button)
     end
 
     @window.show_all

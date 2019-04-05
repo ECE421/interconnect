@@ -7,6 +7,10 @@ require_relative 'main_menu/main_menu_view'
 
 # Presenter class for the AppModel
 class AppPresenter
+  def initialize
+    @last_phase = AppModel::MENU
+  end
+
   def update(signal, *data)
     case signal
     when 'attach_model'
