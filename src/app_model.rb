@@ -48,7 +48,9 @@ class AppModel
       result: NO_RESULT_YET,
       settings: {
         player_1_colour: '#FF00FF',
-        player_2_colour: '#FFFF00'
+        player_2_colour: '#FFFF00',
+        board_columns: 7,
+        board_rows: 6
       }
     }
 
@@ -69,7 +71,7 @@ class AppModel
         window.set_border_width(20)
 
         changed
-        notify_observers('init_views', window, @state[:interface])
+        notify_observers('init_views', window, @state)
         changed
         notify_observers('game_phase_updated', @state) # Start the game at the main menu
       end

@@ -30,14 +30,14 @@ class AppPresenter
     @model = model
   end
 
-  def init_views(window, interface)
+  def init_views(window, state)
     @window = window
 
-    if interface == AppModel::GUI
+    if state[:interface] == AppModel::GUI
       @main_menu_view = MainMenuView.new(@window)
 
-      @game_board_view = GameBoardView.new(@window)
-    elsif interface == AppModel::CLI
+      @game_board_view = GameBoardView.new(@window, state[:settings])
+    elsif state[:interface] == AppModel::CLI
       @main_menu_view = CLIMainMenuView.new
 
       @game_board_view = CLIGameBoardView.new
