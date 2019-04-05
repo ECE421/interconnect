@@ -7,14 +7,13 @@ class GameBoardView
   def initialize(window, settings)
     @window = window # Reference to the application window
 
-    @column_style = Gtk::CssProvider.new
-    @column_style.load(data: 'button {background-image: image(grey); opacity: 0;} button:hover {opacity: 0.5;}')
+    column_style = Gtk::CssProvider.new
+    column_style.load(data: 'button {background-image: image(grey); opacity: 0;} button:hover {opacity: 0.5;}')
 
     @empty_cell = Gtk::CssProvider.new
     @empty_cell.load(data: 'button {background-image: image(white);}')
 
     @player_1_token = Gtk::CssProvider.new
-    # NOTE: Loading doesn't work with template strings
     @player_1_token.load(data: "button {background-image: image(#{settings[:player_1_colour]});}")
 
     @player_2_token = Gtk::CssProvider.new
@@ -51,7 +50,7 @@ class GameBoardView
     (0..(settings[:board_columns] - 1)).each do |column_index|
       column = Gtk::Button.new
       column.set_size_request(100, 100 * settings[:board_rows])
-      column.style_context.add_provider(@column_style, Gtk::StyleProvider::PRIORITY_USER)
+      column.style_context.add_provider(column_style, Gtk::StyleProvider::PRIORITY_USER)
       column.signal_connect('clicked') do |_|
         changed
         notify_observers('column_clicked', column_index)
@@ -96,7 +95,7 @@ class GameBoardView
       main_menu_button = Gtk::Button.new(label: 'Back to Main Menu')
       main_menu_button.signal_connect('clicked') do |_, _|
         changed
-        notify_observers('main_menu_clicked', 0)
+        notify_observers('main_menu_clicked')
       end
       @layout.put(main_menu_button, 0, 100 * state[:settings][:board_rows] + 100)
     end

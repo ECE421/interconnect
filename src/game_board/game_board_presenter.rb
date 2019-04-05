@@ -4,8 +4,9 @@ class GameBoardPresenter
     @model = model
   end
 
-  def update(signal, column_index)
+  def update(signal, *data)
     if signal == 'column_clicked'
+      column_index = data[0]
       @model.place_token(column_index)
     elsif signal == 'main_menu_clicked'
       @model.back_to_main_menu
