@@ -47,11 +47,15 @@ class AppModel
       phase: MENU,
       board_data: Array.new(6) { Array.new(7, 0) },
       result: NO_RESULT_YET,
+      player_1_t: 6,
+      player_1_o: 6,
+      player_2_t: 6,
+      player_2_o: 6,
       settings: {
         player_1_colour: '#FF0000',
         player_2_colour: '#FFFF00',
-        board_columns: 7,
-        board_rows: 6
+        board_columns: 6,
+        board_rows: 4
       }
     }
 
@@ -78,7 +82,7 @@ class AppModel
       end
     elsif interface == CLI
       changed
-      notify_observers('init_views', nil, @state[:interface])
+      notify_observers('init_views', nil, @state)
       changed
       notify_observers('game_phase_updated', @state) # Start the game at the main menu
     end

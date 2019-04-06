@@ -58,6 +58,24 @@ class GameBoardView
       column_grid.attach(column, column_index, 0, 1, 1)
     end
 
+    @tokens_indicator = Gtk::Label.new
+
+    @t_button = Gtk::Button.new
+    @t_button.set_size_request(100, 100)
+    @t_button.style_context.add_provider(@t_token, Gtk::StyleProvider::PRIORITY_USER)
+    @t_button.signal_connect('clicked') do |_, _|
+      changed
+      notify_observers('t_clicked')
+    end
+
+    @o_button = Gtk::Button.new
+    @o_button.set_size_request(100, 100)
+    @o_button.style_context.add_provider(@o_token, Gtk::StyleProvider::PRIORITY_USER)
+    @o_button.signal_connect('clicked') do |_, _|
+      changed
+      notify_observers('o_clicked')
+    end
+
     @winner = Gtk::Label.new
     @main_menu_button = Gtk::Button.new(label: 'Back to Main Menu')
     @main_menu_button.signal_connect('clicked') do |_, _|
@@ -77,12 +95,22 @@ class GameBoardView
       elsif state[:turn] == AppModel::PLAYER_2_TURN
         @turn_indicator.set_markup("<span foreground='#{state[:settings][:player_2_colour]}'>Player 2's Turn:</span>")
       end
+
+      @layout.remove(@tokens_indicator)
+      @layout.remove(@t_button)
+      @layout.remove(@o_button)
     elsif state[:type] == AppModel::TOOT_AND_OTTO
       if state[:turn] == AppModel::PLAYER_1_TURN
         @turn_indicator.set_markup("<span>Player 1's Turn (TOOT):</span>")
+        @tokens_indicator.set_markup("<span>T's Remaining: #{state[:player_1_t]} | O's Remaining: #{state[:player_1_o]}</span>")
       elsif state[:turn] == AppModel::PLAYER_2_TURN
         @turn_indicator.set_markup("<span>Player 2's Turn (OTTO):</span>")
+        @tokens_indicator.set_markup("<span>T's Remaining: #{state[:player_2_t]} | O's Remaining: #{state[:player_2_o]}</span>")
       end
+
+      @layout.put(@tokens_indicator, 0, 100 * state[:settings][:board_rows] + 60)
+      @layout.put(@t_button, 0, 100 * state[:settings][:board_rows] + 100)
+      @layout.put(@o_button, 100, 100 * state[:settings][:board_rows] + 100)
     end
 
     (0..(state[:settings][:board_columns] - 1)).each do |col|
@@ -104,8 +132,8 @@ class GameBoardView
     if state[:phase] == AppModel::GAME_OVER
       winner = state[:result]
       @winner.set_markup(winner == AppModel::TIE ? "<span>It's a tie!</span>" : "<span>Player #{winner} wins!</span>")
-      @layout.put(@winner, 0, 100 * state[:settings][:board_rows] + 60)
-      @layout.put(@main_menu_button, 0, 100 * state[:settings][:board_rows] + 100)
+      @layout.put(@winner, 0, 100 * state[:settings][:board_rows] + 200)
+      @layout.put(@main_menu_button, 0, 100 * state[:settings][:board_rows] + 240)
     else
       @layout.remove(@winner)
       @layout.remove(@main_menu_button)
