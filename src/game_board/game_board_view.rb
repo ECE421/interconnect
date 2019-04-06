@@ -49,7 +49,9 @@ class GameBoardView
   end
 
   # This method is called at the start of a each game
-  def init_layout(settings)
+  def init_layout(state)
+    settings = state[:settings]
+
     @player_1_token_style = Gtk::CssProvider.new
     @player_1_token_style.load(data: "button {background-image: image(#{settings[:player_1_colour]});}")
 
@@ -58,6 +60,8 @@ class GameBoardView
 
     @cells = Array.new(settings[:board_rows]) { Array.new(settings[:board_columns], nil) }
     @layout = Gtk::Fixed.new
+
+    @layout.put(@turn_indicator, 0, 0)
 
     cell_grid = Gtk::Grid.new
     @layout.put(cell_grid, 0, 40)
@@ -85,7 +89,15 @@ class GameBoardView
       column_grid.attach(column, column_index, 0, 1, 1)
     end
 
-    @layout.put(@turn_indicator, 0, 0)
+    if state[:type] == AppModel::CONNECT_4
+      @layout.remove(@tokens_indicator)
+      @layout.remove(@t_button)
+      @layout.remove(@o_button)
+    elsif state[:type] == AppModel::TOOT_AND_OTTO
+      @layout.put(@tokens_indicator, 0, 100 * state[:settings][:board_rows] + 60)
+      @layout.put(@t_button, 0, 100 * state[:settings][:board_rows] + 100)
+      @layout.put(@o_button, 100, 100 * state[:settings][:board_rows] + 100)
+    end
 
     @window.add(@layout)
   end
@@ -97,10 +109,6 @@ class GameBoardView
       elsif state[:turn] == AppModel::PLAYER_2_TURN
         @turn_indicator.set_markup("<span foreground='#{state[:settings][:player_2_colour]}'>Player 2's Turn:</span>")
       end
-
-      @layout.remove(@tokens_indicator)
-      @layout.remove(@t_button)
-      @layout.remove(@o_button)
     elsif state[:type] == AppModel::TOOT_AND_OTTO
       if state[:turn] == AppModel::PLAYER_1_TURN
         @turn_indicator.set_markup("<span>Player 1's Turn (TOOT):</span>")
@@ -109,10 +117,6 @@ class GameBoardView
         @turn_indicator.set_markup("<span>Player 2's Turn (OTTO):</span>")
         @tokens_indicator.set_markup("<span>T's Remaining: #{state[:player_2_t]} | O's Remaining: #{state[:player_2_o]}</span>")
       end
-
-      @layout.put(@tokens_indicator, 0, 100 * state[:settings][:board_rows] + 60)
-      @layout.put(@t_button, 0, 100 * state[:settings][:board_rows] + 100)
-      @layout.put(@o_button, 100, 100 * state[:settings][:board_rows] + 100)
     end
 
     (0..(state[:settings][:board_columns] - 1)).each do |col|

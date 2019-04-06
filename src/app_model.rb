@@ -343,7 +343,6 @@ class AppModel
   end
 
   def connect_4_left_diagonal?
-    # TODO: This cannot be hardcoded :(
     start_indices = [[2, 0], [1, 0], [0, 0], [0, 1], [0, 2], [0, 3]]
     start_indices.each do |index|
       left_diagonal = []
@@ -371,7 +370,6 @@ class AppModel
   end
 
   def connect_4_right_diagonal?
-    # TODO: This cannot be hardcoded :(
     start_indices = [[0, 3], [0, 4], [0, 5], [0, 6], [1, 6], [2, 6]]
     start_indices.each do |index|
       right_diagonal = []
@@ -427,14 +425,13 @@ class AppModel
   end
 
   def toot_and_otto_left_diagonal
-    # TODO: This cannot be hardcoded :(
-    start_indices = [[2, 0], [1, 0], [0, 0], [0, 1], [0, 2], [0, 3]]
+    start_indices = [[0, 0], [0, 1], [0, 2]]
     start_indices.each do |index|
       left_diagonal = []
       i = index[0]
       j = index[1]
 
-      until i == 6 || j == 7
+      until i == 4 || j == 6
         left_diagonal.push(@state[:board_data][i][j])
         i += 1
         j += 1
@@ -453,14 +450,13 @@ class AppModel
   end
 
   def toot_and_otto_right_diagonal
-    # TODO: This cannot be hardcoded :(
-    start_indices = [[0, 3], [0, 4], [0, 5], [0, 6], [1, 6], [2, 6]]
+    start_indices = [[0, 3], [0, 4], [0, 5]]
     start_indices.each do |index|
       right_diagonal = []
       i = index[0]
       j = index[1]
 
-      until i == 6 || j == -1
+      until i == 4 || j == -1
         right_diagonal.push(@state[:board_data][i][j])
         i += 1
         j -= 1
