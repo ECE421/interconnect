@@ -71,10 +71,18 @@ class GameBoardView
   end
 
   def draw(state)
-    if state[:turn] == AppModel::PLAYER_1_TURN
-      @turn_indicator.set_markup("<span foreground='#{state[:settings][:player_1_colour]}'>Player 1's Turn:</span>")
-    elsif state[:turn] == AppModel::PLAYER_2_TURN
-      @turn_indicator.set_markup("<span foreground='#{state[:settings][:player_2_colour]}'>Player 2's Turn:</span>")
+    if state[:type] == AppModel::CONNECT_4
+      if state[:turn] == AppModel::PLAYER_1_TURN
+        @turn_indicator.set_markup("<span foreground='#{state[:settings][:player_1_colour]}'>Player 1's Turn:</span>")
+      elsif state[:turn] == AppModel::PLAYER_2_TURN
+        @turn_indicator.set_markup("<span foreground='#{state[:settings][:player_2_colour]}'>Player 2's Turn:</span>")
+      end
+    elsif state[:type] == AppModel::TOOT_AND_OTTO
+      if state[:turn] == AppModel::PLAYER_1_TURN
+        @turn_indicator.set_markup("<span>Player 1's Turn (TOOT):</span>")
+      elsif state[:turn] == AppModel::PLAYER_2_TURN
+        @turn_indicator.set_markup("<span>Player 2's Turn (OTTO):</span>")
+      end
     end
 
     (0..(state[:settings][:board_columns] - 1)).each do |col|

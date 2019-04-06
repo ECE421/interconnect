@@ -23,6 +23,7 @@ class AppModel
   PLAYER_PLAYER = 0
   PLAYER_CPU = 1
   CPU_PLAYER = 2
+  # TODO: CPU_CPU
 
   # Game phases
   MENU = 0
@@ -47,7 +48,7 @@ class AppModel
       board_data: Array.new(6) { Array.new(7, 0) },
       result: NO_RESULT_YET,
       settings: {
-        player_1_colour: '#FF00FF',
+        player_1_colour: '#FF0000',
         player_2_colour: '#FFFF00',
         board_columns: 7,
         board_rows: 6
@@ -104,6 +105,15 @@ class AppModel
 
   def update_game_type(type)
     @state[:type] = type
+    if @state[:type] == CONNECT_4
+      @state[:settings][:board_columns] = 7
+      @state[:settings][:board_rows] = 6
+      @state[:board_data] =  Array.new(6) { Array.new(7, 0) }
+    elsif @state[:type] == TOOT_AND_OTTO
+      @state[:settings][:board_columns] = 6
+      @state[:settings][:board_rows] = 4
+      @state[:board_data] =  Array.new(4) { Array.new(6, 0) }
+    end
     changed
     notify_observers('game_type_updated', @state)
   end
@@ -329,6 +339,7 @@ class AppModel
   end
 
   def connect_4_left_diagonal?
+    # TODO: This cannot be hardcoded :(
     start_indices = [[2, 0], [1, 0], [0, 0], [0, 1], [0, 2], [0, 3]]
     start_indices.each do |index|
       left_diagonal = []
@@ -356,6 +367,7 @@ class AppModel
   end
 
   def connect_4_right_diagonal?
+    # TODO: This cannot be hardcoded :(
     start_indices = [[0, 3], [0, 4], [0, 5], [0, 6], [1, 6], [2, 6]]
     start_indices.each do |index|
       right_diagonal = []
@@ -411,6 +423,7 @@ class AppModel
   end
 
   def toot_and_otto_left_diagonal
+    # TODO: This cannot be hardcoded :(
     start_indices = [[2, 0], [1, 0], [0, 0], [0, 1], [0, 2], [0, 3]]
     start_indices.each do |index|
       left_diagonal = []
@@ -436,6 +449,7 @@ class AppModel
   end
 
   def toot_and_otto_right_diagonal
+    # TODO: This cannot be hardcoded :(
     start_indices = [[0, 3], [0, 4], [0, 5], [0, 6], [1, 6], [2, 6]]
     start_indices.each do |index|
       right_diagonal = []
