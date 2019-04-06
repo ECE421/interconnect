@@ -54,19 +54,19 @@ class AppModel
       settings: {
         player_1_colour: '#FF0000',
         player_2_colour: '#FFFF00',
-        board_columns: 6,
-        board_rows: 4
+        board_columns: 7,
+        board_rows: 6
       }
     }
 
-    return if presenter.nil?
+    return if presenter.nil? # Presenter should not be nil
 
     add_observer(presenter)
     changed
     notify_observers('attach_model', self)
 
     if interface == GUI
-      return if app.nil?
+      return if app.nil? # App should not be nil
 
       @app = app
       @app.signal_connect('activate') do |application|
