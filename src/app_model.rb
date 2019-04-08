@@ -154,6 +154,8 @@ class AppModel
     @state[:mode] = PLAYER_PLAYER
     @state[:board_data] = Array.new(6) { Array.new(7, 0) }
     @state[:result] = NO_RESULT_YET
+    @state[:settings][:board_columns] = 7
+    @state[:settings][:board_rows] = 6
     update_game_phase(MENU)
   end
 
@@ -161,7 +163,6 @@ class AppModel
     @state[:phase] = phase
     changed
     notify_observers('game_phase_updated', @state)
-    # @presenter.game_phase_updated(@state)
   end
 
   def place_token(column_index)
