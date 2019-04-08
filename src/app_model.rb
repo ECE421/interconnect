@@ -36,6 +36,10 @@ class AppModel
   PLAYER_2_WINS = 2
   TIE = 3
 
+  # TOkEN
+  TOKEN_T = 1
+  TOKEN_O = 2
+
   def initialize(app, presenter, interface = GUI)
     # Initial game state
     @state = {
@@ -47,6 +51,11 @@ class AppModel
       phase: MENU,
       board_data: Array.new(6) { Array.new(7, 0) },
       result: NO_RESULT_YET,
+      player_1_t: 6,
+      player_1_o: 6,
+      player_2_t: 6,
+      player_2_o: 6,
+      active_token: TOKEN_T,
       settings: {
         player_1_colour: '#FF0000',
         player_2_colour: '#FFFF00',
@@ -55,14 +64,14 @@ class AppModel
       }
     }
 
-    return if presenter.nil?
+    return if presenter.nil? # Presenter should not be nil
 
     add_observer(presenter)
     changed
     notify_observers('attach_model', self)
 
     if interface == GUI
-      return if app.nil?
+      return if app.nil? # App should not be nil
 
       @app = app
       @app.signal_connect('activate') do |application|
@@ -78,7 +87,7 @@ class AppModel
       end
     elsif interface == CLI
       changed
-      notify_observers('init_views', nil, @state[:interface])
+      notify_observers('init_views', nil, @state)
       changed
       notify_observers('game_phase_updated', @state) # Start the game at the main menu
     end
@@ -126,6 +135,11 @@ class AppModel
     notify_observers('game_mode_updated', @state)
   end
 
+  def update_active_token(token)
+    @state[:active_token] = token
+    update_turn(state[:turn])
+  end
+
   def start_game
     update_game_phase(IN_PROGRESS)
     return unless @state[:mode] == CPU_PLAYER
@@ -140,6 +154,8 @@ class AppModel
     @state[:mode] = PLAYER_PLAYER
     @state[:board_data] = Array.new(6) { Array.new(7, 0) }
     @state[:result] = NO_RESULT_YET
+    @state[:settings][:board_columns] = 7
+    @state[:settings][:board_rows] = 6
     update_game_phase(MENU)
   end
 
@@ -147,7 +163,6 @@ class AppModel
     @state[:phase] = phase
     changed
     notify_observers('game_phase_updated', @state)
-    # @presenter.game_phase_updated(@state)
   end
 
   def place_token(column_index)
@@ -182,7 +197,24 @@ class AppModel
       next unless element.zero?
 
       row_index = (@state[:board_data].length - 1) - reverse_index
-      @state[:board_data][row_index][column_index] = @state[:turn]
+      if @state[:type] == CONNECT_4
+        @state[:board_data][row_index][column_index] = @state[:turn]
+      elsif @state[:type] == TOOT_AND_OTTO
+        if @state[:turn] == PLAYER_1_TURN && @state[:active_token] == TOKEN_T
+          return false unless @state[:player_1_t] > 0
+          @state[:player_1_t] -= 1
+        elsif @state[:turn] == PLAYER_1_TURN && @state[:active_token] == TOKEN_O
+          return false unless @state[:player_1_o] > 0
+          @state[:player_1_o] -= 1
+        elsif @state[:turn] == PLAYER_2_TURN && @state[:active_token] == TOKEN_T
+          return false unless @state[:player_2_t] > 0
+          @state[:player_2_t] -= 1
+        elsif @state[:turn] == PLAYER_2_TURN && @state[:active_token] == TOKEN_O
+          return false unless @state[:player_2_o] > 0
+          @state[:player_2_o] -= 1
+        end
+        @state[:board_data][row_index][column_index] = @state[:active_token]
+      end
       return true
     end
     false
@@ -339,7 +371,6 @@ class AppModel
   end
 
   def connect_4_left_diagonal?
-    # TODO: This cannot be hardcoded :(
     start_indices = [[2, 0], [1, 0], [0, 0], [0, 1], [0, 2], [0, 3]]
     start_indices.each do |index|
       left_diagonal = []
@@ -367,7 +398,6 @@ class AppModel
   end
 
   def connect_4_right_diagonal?
-    # TODO: This cannot be hardcoded :(
     start_indices = [[0, 3], [0, 4], [0, 5], [0, 6], [1, 6], [2, 6]]
     start_indices.each do |index|
       right_diagonal = []
@@ -423,14 +453,13 @@ class AppModel
   end
 
   def toot_and_otto_left_diagonal
-    # TODO: This cannot be hardcoded :(
-    start_indices = [[2, 0], [1, 0], [0, 0], [0, 1], [0, 2], [0, 3]]
+    start_indices = [[0, 0], [0, 1], [0, 2]]
     start_indices.each do |index|
       left_diagonal = []
       i = index[0]
       j = index[1]
 
-      until i == 6 || j == 7
+      until i == 4 || j == 6
         left_diagonal.push(@state[:board_data][i][j])
         i += 1
         j += 1
@@ -449,14 +478,13 @@ class AppModel
   end
 
   def toot_and_otto_right_diagonal
-    # TODO: This cannot be hardcoded :(
-    start_indices = [[0, 3], [0, 4], [0, 5], [0, 6], [1, 6], [2, 6]]
+    start_indices = [[0, 3], [0, 4], [0, 5]]
     start_indices.each do |index|
       right_diagonal = []
       i = index[0]
       j = index[1]
 
-      until i == 6 || j == -1
+      until i == 4 || j == -1
         right_diagonal.push(@state[:board_data][i][j])
         i += 1
         j -= 1

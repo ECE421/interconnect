@@ -5,11 +5,18 @@ class GameBoardPresenter
   end
 
   def update(signal, *data)
-    if signal == 'column_clicked'
+    case signal
+    when 'column_clicked'
       column_index = data[0]
       @model.place_token(column_index)
-    elsif signal == 'main_menu_clicked'
+    when 'main_menu_clicked'
       @model.back_to_main_menu
+    when 't_clicked'
+      @model.update_active_token(AppModel::TOKEN_T)
+    when 'o_clicked'
+      @model.update_active_token(AppModel::TOKEN_O)
+    else
+      raise(ArgumentError)
     end
   end
 end

@@ -40,7 +40,7 @@ class AppPresenter
     if state[:interface] == AppModel::GUI
       @main_menu_view = MainMenuView.new(@window)
 
-      @game_board_view = GameBoardView.new(@window, state[:settings])
+      @game_board_view = GameBoardView.new(@window)
     elsif state[:interface] == AppModel::CLI
       @main_menu_view = CLIMainMenuView.new
 
@@ -64,7 +64,7 @@ class AppPresenter
     if state[:phase] == AppModel::MENU
       @main_menu_view.draw(state[:type], state[:mode])
     elsif state[:phase] == AppModel::IN_PROGRESS || state[:phase] == AppModel::GAME_OVER
-      @game_board_view.bind_layout
+      @game_board_view.init_layout(state)
       @game_board_view.draw(state)
     end
   end
