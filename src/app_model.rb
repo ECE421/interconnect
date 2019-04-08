@@ -36,6 +36,10 @@ class AppModel
   PLAYER_2_WINS = 2
   TIE = 3
 
+  # TOkEN
+  TOKEN_T = 1
+  TOKEN_O = 2
+
   def initialize(app, presenter, interface = GUI)
     # Initial game state
     @state = {
@@ -51,6 +55,7 @@ class AppModel
       player_1_o: 6,
       player_2_t: 6,
       player_2_o: 6,
+      active_token: TOKEN_T,
       settings: {
         player_1_colour: '#FF0000',
         player_2_colour: '#FFFF00',
@@ -130,6 +135,11 @@ class AppModel
     notify_observers('game_mode_updated', @state)
   end
 
+  def update_active_token(token)
+    @state[:active_token] = token
+    update_turn(state[:turn])
+  end
+
   def start_game
     update_game_phase(IN_PROGRESS)
     return unless @state[:mode] == CPU_PLAYER
@@ -186,7 +196,24 @@ class AppModel
       next unless element.zero?
 
       row_index = (@state[:board_data].length - 1) - reverse_index
-      @state[:board_data][row_index][column_index] = @state[:turn]
+      if @state[:type] == CONNECT_4
+        @state[:board_data][row_index][column_index] = @state[:turn]
+      elsif @state[:type] == TOOT_AND_OTTO
+        if @state[:turn] == PLAYER_1_TURN && @state[:active_token] == TOKEN_T
+          return false unless @state[:player_1_t] > 0
+          @state[:player_1_t] -= 1
+        elsif @state[:turn] == PLAYER_1_TURN && @state[:active_token] == TOKEN_O
+          return false unless @state[:player_1_o] > 0
+          @state[:player_1_o] -= 1
+        elsif @state[:turn] == PLAYER_2_TURN && @state[:active_token] == TOKEN_T
+          return false unless @state[:player_2_t] > 0
+          @state[:player_2_t] -= 1
+        elsif @state[:turn] == PLAYER_2_TURN && @state[:active_token] == TOKEN_O
+          return false unless @state[:player_2_o] > 0
+          @state[:player_2_o] -= 1
+        end
+        @state[:board_data][row_index][column_index] = @state[:active_token]
+      end
       return true
     end
     false

@@ -67,6 +67,7 @@ class AppPresenter
       @game_board_view.init_layout(state)
       @game_board_view.draw(state)
     elsif state[:phase] == AppModel::GAME_OVER
+      @game_board_view.init_layout(state)
       @game_board_view.draw(state)
     end
   end

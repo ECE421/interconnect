@@ -14,11 +14,17 @@ class GameBoardView
     @empty_cell_style = Gtk::CssProvider.new
     @empty_cell_style.load(data: 'button {background-image: image(white);}')
 
-    @t_token_style = Gtk::CssProvider.new
-    @t_token_style.load(data: 'button {background-image: url("./src/game_board/t.png");}')
+    @t_style = Gtk::CssProvider.new
+    @t_style.load(data: 'button {background-image: url("./src/game_board/t.png");}')
 
-    @o_token_style = Gtk::CssProvider.new
-    @o_token_style.load(data: 'button {background-image: url("./src/game_board/o.png");}')
+    @t_selected_style = Gtk::CssProvider.new
+    @t_selected_style.load(data: 'button {background-image: url("./src/game_board/t_selected.png");}')
+
+    @o_style = Gtk::CssProvider.new
+    @o_style.load(data: 'button {background-image: url("./src/game_board/o.png");}')
+
+    @o_selected_style = Gtk::CssProvider.new
+    @o_selected_style.load(data: 'button {background-image: url("./src/game_board/o_selected.png");}')
 
     @turn_indicator = Gtk::Label.new
 
@@ -26,7 +32,6 @@ class GameBoardView
 
     @t_button = Gtk::Button.new
     @t_button.set_size_request(100, 100)
-    @t_button.style_context.add_provider(@t_token_style, Gtk::StyleProvider::PRIORITY_USER)
     @t_button.signal_connect('clicked') do |_, _|
       changed
       notify_observers('t_clicked')
@@ -34,7 +39,6 @@ class GameBoardView
 
     @o_button = Gtk::Button.new
     @o_button.set_size_request(100, 100)
-    @o_button.style_context.add_provider(@o_token_style, Gtk::StyleProvider::PRIORITY_USER)
     @o_button.signal_connect('clicked') do |_, _|
       changed
       notify_observers('o_clicked')
@@ -117,6 +121,14 @@ class GameBoardView
         @turn_indicator.set_markup("<span>Player 2's Turn (OTTO):</span>")
         @tokens_indicator.set_markup("<span>T's Remaining: #{state[:player_2_t]} | O's Remaining: #{state[:player_2_o]}</span>")
       end
+
+      if state[:active_token] == AppModel::TOKEN_T
+        @t_button.style_context.add_provider(@t_selected_style, Gtk::StyleProvider::PRIORITY_USER)
+        @o_button.style_context.add_provider(@o_style, Gtk::StyleProvider::PRIORITY_USER)
+      elsif state[:active_token] == AppModel::TOKEN_O
+        @t_button.style_context.add_provider(@t_style, Gtk::StyleProvider::PRIORITY_USER)
+        @o_button.style_context.add_provider(@o_selected_style, Gtk::StyleProvider::PRIORITY_USER)
+      end
     end
 
     (0..(state[:settings][:board_columns] - 1)).each do |col|
@@ -126,11 +138,11 @@ class GameBoardView
         elsif state[:board_data][row][col] == 1 && state[:type] == AppModel::CONNECT_4
           @cells[row][col].style_context.add_provider(@player_1_token_style, Gtk::StyleProvider::PRIORITY_USER)
         elsif state[:board_data][row][col] == 1 && state[:type] == AppModel::TOOT_AND_OTTO
-          @cells[row][col].style_context.add_provider(@t_token_style, Gtk::StyleProvider::PRIORITY_USER)
+          @cells[row][col].style_context.add_provider(@t_style, Gtk::StyleProvider::PRIORITY_USER)
         elsif state[:board_data][row][col] == 2 && state[:type] == AppModel::CONNECT_4
           @cells[row][col].style_context.add_provider(@player_2_token_style, Gtk::StyleProvider::PRIORITY_USER)
         elsif state[:board_data][row][col] == 2 && state[:type] == AppModel::TOOT_AND_OTTO
-          @cells[row][col].style_context.add_provider(@o_token_style, Gtk::StyleProvider::PRIORITY_USER)
+          @cells[row][col].style_context.add_provider(@o_style, Gtk::StyleProvider::PRIORITY_USER)
         end
       end
     end
