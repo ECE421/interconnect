@@ -25,31 +25,6 @@ class GameBoardView
 
     @o_selected_style = Gtk::CssProvider.new
     @o_selected_style.load(data: 'button {background-image: url("./src/game_board/o_selected.png");}')
-
-    @turn_indicator = Gtk::Label.new
-
-    @tokens_indicator = Gtk::Label.new
-
-    @t_button = Gtk::Button.new
-    @t_button.set_size_request(100, 100)
-    @t_button.signal_connect('clicked') do |_, _|
-      changed
-      notify_observers('t_clicked')
-    end
-
-    @o_button = Gtk::Button.new
-    @o_button.set_size_request(100, 100)
-    @o_button.signal_connect('clicked') do |_, _|
-      changed
-      notify_observers('o_clicked')
-    end
-
-    @winner = Gtk::Label.new
-    @main_menu_button = Gtk::Button.new(label: 'Back to Main Menu')
-    @main_menu_button.signal_connect('clicked') do |_, _|
-      changed
-      notify_observers('main_menu_clicked')
-    end
   end
 
   # This method is called at the start of a each game
@@ -65,6 +40,7 @@ class GameBoardView
     @cells = Array.new(settings[:board_rows]) { Array.new(settings[:board_columns], nil) }
     @layout = Gtk::Fixed.new
 
+    @turn_indicator = Gtk::Label.new
     @layout.put(@turn_indicator, 0, 0)
 
     cell_grid = Gtk::Grid.new
@@ -91,6 +67,29 @@ class GameBoardView
         notify_observers('column_clicked', column_index)
       end
       column_grid.attach(column, column_index, 0, 1, 1)
+    end
+
+    @tokens_indicator = Gtk::Label.new
+
+    @t_button = Gtk::Button.new
+    @t_button.set_size_request(100, 100)
+    @t_button.signal_connect('clicked') do |_, _|
+      changed
+      notify_observers('t_clicked')
+    end
+
+    @o_button = Gtk::Button.new
+    @o_button.set_size_request(100, 100)
+    @o_button.signal_connect('clicked') do |_, _|
+      changed
+      notify_observers('o_clicked')
+    end
+
+    @winner = Gtk::Label.new
+    @main_menu_button = Gtk::Button.new(label: 'Back to Main Menu')
+    @main_menu_button.signal_connect('clicked') do |_, _|
+      changed
+      notify_observers('main_menu_clicked')
     end
 
     if state[:type] == AppModel::CONNECT_4
@@ -150,8 +149,13 @@ class GameBoardView
     if state[:phase] == AppModel::GAME_OVER
       winner = state[:result]
       @winner.set_markup(winner == AppModel::TIE ? "<span>It's a tie!</span>" : "<span>Player #{winner} wins!</span>")
-      @layout.put(@winner, 0, 100 * state[:settings][:board_rows] + 200)
-      @layout.put(@main_menu_button, 0, 100 * state[:settings][:board_rows] + 240)
+      if state[:type] == AppModel::CONNECT_4
+        @layout.put(@winner, 0, 100 * state[:settings][:board_rows] + 60)
+        @layout.put(@main_menu_button, 0, 100 * state[:settings][:board_rows] + 100)
+      elsif state[:type] == AppModel::TOOT_AND_OTTO
+        @layout.put(@winner, 0, 100 * state[:settings][:board_rows] + 200)
+        @layout.put(@main_menu_button, 0, 100 * state[:settings][:board_rows] + 240)
+      end
     else
       @layout.remove(@winner)
       @layout.remove(@main_menu_button)

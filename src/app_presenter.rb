@@ -63,10 +63,7 @@ class AppPresenter
 
     if state[:phase] == AppModel::MENU
       @main_menu_view.draw(state[:type], state[:mode])
-    elsif state[:phase] == AppModel::IN_PROGRESS
-      @game_board_view.init_layout(state)
-      @game_board_view.draw(state)
-    elsif state[:phase] == AppModel::GAME_OVER
+    elsif state[:phase] == AppModel::IN_PROGRESS || state[:phase] == AppModel::GAME_OVER
       @game_board_view.init_layout(state)
       @game_board_view.draw(state)
     end
