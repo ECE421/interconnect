@@ -36,7 +36,7 @@ class AppModel
   PLAYER_2_WINS = 2
   TIE = 3
 
-  # TOkEN
+  # TOKEN
   TOKEN_T = 1
   TOKEN_O = 2
 
