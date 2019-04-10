@@ -56,46 +56,51 @@ class CLIGameBoardView
       exit
     end
 
-    valid_input = false
-    until valid_input
-      if state[:type] == AppModel::CONNECT_4
-        input = Readline.readline("Player #{state[:turn]}:", true)
-        if %w[1 2 3 4 5 6 7].include?(input)
-          valid_input = true
-          column_index = Integer(input) - 1
-          changed
-          notify_observers('column_clicked', column_index)
-        else
-          puts('Invalid command. Must input column number as: <integer> (1-7)')
-        end
-      elsif state[:type] == AppModel::TOOT_AND_OTTO
-        if state[:turn] == 1 && state[:active_token] == AppModel::TOKEN_T
-          input = Readline.readline("Player 1, [T] x#{state[:player_1_t]} | O x#{state[:player_1_o]}:", true)
-        elsif state[:turn] == 1 && state[:active_token] == AppModel::TOKEN_O
-          input = Readline.readline("Player 1, T x#{state[:player_1_t]} | [O] x#{state[:player_1_o]}:", true)
-        elsif state[:turn] == 2 && state[:active_token] == AppModel::TOKEN_T
-          input = Readline.readline("Player 2, [T] x#{state[:player_2_t]} | O x#{state[:player_2_o]}:", true)
-        elsif state[:turn] == 2 && state[:active_token] == AppModel::TOKEN_O
-          input = Readline.readline("Player 2, T x#{state[:player_2_t]} | [O] x#{state[:player_2_o]}:", true)
-        end
+    if state[:player_turn]
+      valid_input = false
+      until valid_input
+        if state[:type] == AppModel::CONNECT_4
+          input = Readline.readline("Player #{state[:turn]}:", true)
+          if %w[1 2 3 4 5 6 7].include?(input)
+            valid_input = true
+            column_index = Integer(input) - 1
+            changed
+            notify_observers('column_clicked', column_index)
+          else
+            puts('Invalid command. Must input column number as: <integer> (1-7)')
+          end
+        elsif state[:type] == AppModel::TOOT_AND_OTTO
+          if state[:turn] == 1 && state[:active_token] == AppModel::TOKEN_T
+            input = Readline.readline("Player 1, [T] x#{state[:player_1_t]} | O x#{state[:player_1_o]}:", true)
+          elsif state[:turn] == 1 && state[:active_token] == AppModel::TOKEN_O
+            input = Readline.readline("Player 1, T x#{state[:player_1_t]} | [O] x#{state[:player_1_o]}:", true)
+          elsif state[:turn] == 2 && state[:active_token] == AppModel::TOKEN_T
+            input = Readline.readline("Player 2, [T] x#{state[:player_2_t]} | O x#{state[:player_2_o]}:", true)
+          elsif state[:turn] == 2 && state[:active_token] == AppModel::TOKEN_O
+            input = Readline.readline("Player 2, T x#{state[:player_2_t]} | [O] x#{state[:player_2_o]}:", true)
+          end
 
-        if %w[t T].include?(input)
-          valid_input = true
-          changed
-          notify_observers('t_clicked')
-        elsif %w[o O].include?(input)
-          valid_input = true
-          changed
-          notify_observers('o_clicked')
-        elsif %w[1 2 3 4 5 6].include?(input)
-          valid_input = true
-          column_index = Integer(input) - 1
-          changed
-          notify_observers('column_clicked', column_index)
-        else
-          puts('Invalid command. Options are: Column (1-6); T (case-insensitive); or O (case-insensitive)')
+          if %w[t T].include?(input)
+            valid_input = true
+            changed
+            notify_observers('t_clicked')
+          elsif %w[o O].include?(input)
+            valid_input = true
+            changed
+            notify_observers('o_clicked')
+          elsif %w[1 2 3 4 5 6].include?(input)
+            valid_input = true
+            column_index = Integer(input) - 1
+            changed
+            notify_observers('column_clicked', column_index)
+          else
+            puts('Invalid command. Options are: Column (1-6); T (case-insensitive); or O (case-insensitive)')
+          end
         end
       end
+    else
+      changed
+      notify_observers('cpu_turn')
     end
   end
 end

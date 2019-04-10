@@ -32,6 +32,7 @@ class MainMenuView
     game_mode_combo_box.append_text('Player vs. Player')
     game_mode_combo_box.append_text('Player vs. CPU')
     game_mode_combo_box.append_text('CPU vs. Player')
+    game_mode_combo_box.append_text('CPU vs. CPU')
 
     game_mode_combo_box.set_active(mode)
     game_mode_combo_box.signal_connect('changed') do |_, _|

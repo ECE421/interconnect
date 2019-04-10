@@ -21,17 +21,17 @@ class CLIMainMenuView
     end
 
     puts('Which game mode?')
-    puts('Options: Player vs. Player (0), Player vs. CPU (1), or CPU vs. Player (2)')
+    puts('Options: Player vs. Player (0), Player vs. CPU (1), CPU vs. Player (2), or CPU vs. CPU (3)')
     valid_mode = false
     until valid_mode
       input = Readline.readline('Game mode?', true)
-      if %w[0 1 2].include?(input)
+      if %w[0 1 2 3].include?(input)
         valid_mode = true
         game_mode = Integer(input)
         changed
         notify_observers('game_mode_changed', game_mode)
       else
-        puts('Invalid game mode. Must be 0, 1, or 2')
+        puts('Invalid game mode. Must be 0, 1, 2, or 3')
       end
     end
 

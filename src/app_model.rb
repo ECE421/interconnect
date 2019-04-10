@@ -68,15 +68,11 @@ class AppModel
       cpu_difficulty: EASY
     }
 
-    return if presenter.nil? # Presenter should not be nil
-
     add_observer(presenter)
     changed
     notify_observers('attach_model', self)
 
     if interface == GUI
-      return if app.nil? # App should not be nil
-
       @app = app
       @app.signal_connect('activate') do |application|
         window = Gtk::ApplicationWindow.new(application)
@@ -100,15 +96,15 @@ class AppModel
   def update_turn(turn)
     @state[:turn] = turn
 
-    if turn == 1 && @state[:mode] == PLAYER_CPU
+    if @state[:turn] == PLAYER_1_TURN && @state[:mode] == PLAYER_CPU
       @state[:player_turn] = true
-    elsif turn == 2 && @state[:mode] == PLAYER_CPU
+    elsif @state[:turn] == PLAYER_2_TURN && @state[:mode] == PLAYER_CPU
       @state[:player_turn] = false
     end
 
-    if turn == 1 && @state[:mode] == CPU_PLAYER
+    if @state[:turn] == PLAYER_1_TURN && @state[:mode] == CPU_PLAYER
       @state[:player_turn] = false
-    elsif turn == 2 && @state[:mode] == CPU_PLAYER
+    elsif @state[:turn] == PLAYER_2_TURN && @state[:mode] == CPU_PLAYER
       @state[:player_turn] = true
     end
 
@@ -133,7 +129,7 @@ class AppModel
 
   def update_game_mode(mode)
     @state[:mode] = mode
-    @state[:player_turn] = (mode != CPU_PLAYER)
+    @state[:player_turn] = (mode != CPU_PLAYER && mode != CPU_CPU)
 
     changed
     notify_observers('game_mode_updated', @state)
@@ -141,25 +137,17 @@ class AppModel
 
   def update_active_token(token)
     @state[:active_token] = token
-    update_turn(state[:turn])
+    update_turn(@state[:turn])
   end
 
   def start_game
     update_game_phase(IN_PROGRESS)
-    return unless @state[:mode] == CPU_PLAYER
-
-    cpu_turn # cpu makes a move
-    update_turn(PLAYER_2_TURN) # gives turn to player 2
   end
 
   def back_to_main_menu
     @state[:turn] = PLAYER_1_TURN
-    @state[:type] = CONNECT_4
-    @state[:mode] = PLAYER_PLAYER
-    @state[:board_data] = Array.new(6) { Array.new(7, 0) }
+    @state[:board_data] = Array.new(@state[:board_rows]) { Array.new(@state[:board_columns], 0) }
     @state[:result] = NO_RESULT_YET
-    @state[:board_columns] = 7
-    @state[:board_rows] = 6
     update_game_phase(MENU)
   end
 
@@ -181,16 +169,8 @@ class AppModel
       update_game_phase(GAME_OVER)
     elsif @state[:turn] == PLAYER_1_TURN && token_played
       update_turn(PLAYER_2_TURN)
-      if @state[:mode] == PLAYER_CPU
-        cpu_turn # cpu makes a move
-        update_turn(PLAYER_1_TURN) # gives turn back
-      end
     elsif @state[:turn] == PLAYER_2_TURN && token_played
       update_turn(PLAYER_1_TURN)
-      if @state[:mode] == CPU_PLAYER
-        cpu_turn # cpu makes a move
-        update_turn(PLAYER_2_TURN) # gives turn back
-      end
     elsif !token_played
       update_turn(@state[:turn]) # Column was full, try again
     end
@@ -237,11 +217,7 @@ class AppModel
 
   # CPU plays a turn
   def cpu_turn
-    if @state[:cpu_difficulty] > rand || @state[:type] == TOOT_AND_OTTO
-      cpu_random
-    else
-      cpu_progress unless cpu_attempt || cpu_prevent
-    end
+    cpu_random
   end
 
   # cpu_attempt works to try to win the game by placing a token in each column once and checking to see if any result in

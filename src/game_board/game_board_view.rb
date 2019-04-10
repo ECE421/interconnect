@@ -160,5 +160,10 @@ class GameBoardView
     end
 
     @window.show_all
+
+    unless state[:player_turn]
+      changed
+      notify_observers('cpu_turn')
+    end
   end
 end
