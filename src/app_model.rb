@@ -505,7 +505,7 @@ class AppModel
   def toot_and_otto_increment(consecutive_toot, consecutive_otto, element)
     return ['', ''] if element.zero?
 
-    if element == 1
+    if element == TOKEN_T
       if ['', 'too'].include?(consecutive_toot)
         consecutive_toot += 't'
       else
@@ -517,7 +517,7 @@ class AppModel
       else
         consecutive_otto = ''
       end
-    elsif element == 2
+    elsif element == TOKEN_O
       if %w[t to].include?(consecutive_toot)
         consecutive_toot += 'o'
       else
