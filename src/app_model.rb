@@ -23,22 +23,27 @@ class AppModel
   PLAYER_PLAYER = 0
   PLAYER_CPU = 1
   CPU_PLAYER = 2
-  # TODO: CPU_CPU
+  CPU_CPU = 3
 
   # Game phases
   MENU = 0
   IN_PROGRESS = 1
   GAME_OVER = 2
 
-  # GAME_RESULT
+  # Game result
   NO_RESULT_YET = 0
   PLAYER_1_WINS = 1
   PLAYER_2_WINS = 2
   TIE = 3
 
-  # TOKEN
+  # Token
   TOKEN_T = 1
   TOKEN_O = 2
+
+  # CPU Difficulty (percentage chance of playing random)
+  EASY = 0.75
+  MEDIUM = 0.25
+  HARD = 0
 
   def initialize(app, presenter, interface = GUI)
     # Initial game state
@@ -55,24 +60,19 @@ class AppModel
       player_1_o: 6,
       player_2_t: 6,
       player_2_o: 6,
+      board_columns: 7,
+      board_rows: 6,
       active_token: TOKEN_T,
-      settings: {
-        player_1_colour: '#FF0000',
-        player_2_colour: '#FFFF00',
-        board_columns: 7,
-        board_rows: 6
-      }
+      player_1_colour: '#FF0000',
+      player_2_colour: '#FFFF00',
+      cpu_difficulty: EASY
     }
-
-    return if presenter.nil? # Presenter should not be nil
 
     add_observer(presenter)
     changed
     notify_observers('attach_model', self)
 
     if interface == GUI
-      return if app.nil? # App should not be nil
-
       @app = app
       @app.signal_connect('activate') do |application|
         window = Gtk::ApplicationWindow.new(application)
@@ -96,15 +96,15 @@ class AppModel
   def update_turn(turn)
     @state[:turn] = turn
 
-    if turn == 1 && @state[:mode] == PLAYER_CPU
+    if @state[:turn] == PLAYER_1_TURN && @state[:mode] == PLAYER_CPU
       @state[:player_turn] = true
-    elsif turn == 2 && @state[:mode] == PLAYER_CPU
+    elsif @state[:turn] == PLAYER_2_TURN && @state[:mode] == PLAYER_CPU
       @state[:player_turn] = false
     end
 
-    if turn == 1 && @state[:mode] == CPU_PLAYER
+    if @state[:turn] == PLAYER_1_TURN && @state[:mode] == CPU_PLAYER
       @state[:player_turn] = false
-    elsif turn == 2 && @state[:mode] == CPU_PLAYER
+    elsif @state[:turn] == PLAYER_2_TURN && @state[:mode] == CPU_PLAYER
       @state[:player_turn] = true
     end
 
@@ -115,12 +115,12 @@ class AppModel
   def update_game_type(type)
     @state[:type] = type
     if @state[:type] == CONNECT_4
-      @state[:settings][:board_columns] = 7
-      @state[:settings][:board_rows] = 6
+      @state[:board_columns] = 7
+      @state[:board_rows] = 6
       @state[:board_data] =  Array.new(6) { Array.new(7, 0) }
     elsif @state[:type] == TOOT_AND_OTTO
-      @state[:settings][:board_columns] = 6
-      @state[:settings][:board_rows] = 4
+      @state[:board_columns] = 6
+      @state[:board_rows] = 4
       @state[:board_data] =  Array.new(4) { Array.new(6, 0) }
     end
     changed
@@ -129,7 +129,7 @@ class AppModel
 
   def update_game_mode(mode)
     @state[:mode] = mode
-    @state[:player_turn] = (mode != CPU_PLAYER)
+    @state[:player_turn] = (mode != CPU_PLAYER && mode != CPU_CPU)
 
     changed
     notify_observers('game_mode_updated', @state)
@@ -137,25 +137,17 @@ class AppModel
 
   def update_active_token(token)
     @state[:active_token] = token
-    update_turn(state[:turn])
+    update_turn(@state[:turn])
   end
 
   def start_game
     update_game_phase(IN_PROGRESS)
-    return unless @state[:mode] == CPU_PLAYER
-
-    cpu_turn # cpu makes a move
-    update_turn(PLAYER_2_TURN) # gives turn to player 2
   end
 
   def back_to_main_menu
     @state[:turn] = PLAYER_1_TURN
-    @state[:type] = CONNECT_4
-    @state[:mode] = PLAYER_PLAYER
-    @state[:board_data] = Array.new(6) { Array.new(7, 0) }
+    @state[:board_data] = Array.new(@state[:board_rows]) { Array.new(@state[:board_columns], 0) }
     @state[:result] = NO_RESULT_YET
-    @state[:settings][:board_columns] = 7
-    @state[:settings][:board_rows] = 6
     update_game_phase(MENU)
   end
 
@@ -177,16 +169,8 @@ class AppModel
       update_game_phase(GAME_OVER)
     elsif @state[:turn] == PLAYER_1_TURN && token_played
       update_turn(PLAYER_2_TURN)
-      if @state[:mode] == PLAYER_CPU
-        cpu_turn # cpu makes a move
-        update_turn(PLAYER_1_TURN) # gives turn back
-      end
     elsif @state[:turn] == PLAYER_2_TURN && token_played
       update_turn(PLAYER_1_TURN)
-      if @state[:mode] == CPU_PLAYER
-        cpu_turn # cpu makes a move
-        update_turn(PLAYER_2_TURN) # gives turn back
-      end
     elsif !token_played
       update_turn(@state[:turn]) # Column was full, try again
     end
@@ -231,20 +215,15 @@ class AppModel
     @state[:board_data][0][column_index] = 0
   end
 
-  # our cpu algorithm works as follows
-  # 1. attempt to place a token in each column as current player (aggression)
-  # if any token results in a win then make that placement
-  # 2. attempt to place a token in each column as opposite player (prevention)
-  # if any token results in a win then make that placement
-  # 3. if neither condition place token in longest vertical or horizontal (extension)
+  # CPU plays a turn
   def cpu_turn
-    cpu_progress unless cpu_attempt || cpu_prevent # ruby craziness
+    cpu_random
   end
 
   # cpu_attempt works to try to win the game by placing a token in each column once and checking to see if any result in
   # a win condition. it clears all unsuccessful token attempts
   def cpu_attempt
-    (0..6).each do |c|
+    (0..(@state[:board_columns] - 1)).each do |c|
       token_placed = board_place_token(c)
       if game_result != NO_RESULT_YET # full send
         @state[:result] = game_result
@@ -263,7 +242,7 @@ class AppModel
   def cpu_prevent
     current_turn = @state[:turn]
     @state[:turn] = current_turn == PLAYER_1_TURN ? PLAYER_2_TURN : PLAYER_1_TURN # pretend to be other player
-    (0..6).each do |c|
+    (0..(@state[:board_columns] - 1)).each do |c|
       token_placed = board_place_token(c)
       if game_result != NO_RESULT_YET
         board_remove_token(c) # remove the winning move
@@ -282,8 +261,8 @@ class AppModel
   # one that results in a win, it then erases all previous moves and places this move.
   def cpu_progress
     remove_array = []
-    (0..3).each do |_i|
-      (0..6).each do |c|
+    (0..3).each do |_|
+      (0..(@state[:board_columns] - 1)).each do |c|
         token_placed = board_place_token(c)
         if game_result != NO_RESULT_YET
           remove_array.reverse_each do |r| # remove moves from our array 'stack'
@@ -294,6 +273,14 @@ class AppModel
         remove_array.push(c) if token_placed # add move for later deletion
       end
     end
+  end
+
+  # Play a random move
+  def cpu_random
+    if @state[:type] == TOOT_AND_OTTO
+      @state[:active_token] = rand(0..1).zero? ? TOKEN_T : TOKEN_O
+    end
+    place_token(rand(0..(@state[:board_columns] - 1)))
   end
 
   def game_result
@@ -336,15 +323,15 @@ class AppModel
 
   def connect_4_horizontal?
     @state[:board_data].each do |row|
-      consecutive = 0
+      chain = 0
       row.each do |element|
         if element != @state[:turn]
-          consecutive = 0
+          chain = 0
           next
         end
 
-        consecutive += 1
-        return true if consecutive == 4
+        chain += 1
+        return true if chain == 4
       end
     end
     false
@@ -352,15 +339,15 @@ class AppModel
 
   def connect_4_vertical?
     Matrix[*@state[:board_data]].column_vectors.each do |column|
-      consecutive = 0
+      chain = 0
       column.each do |element|
         if element != @state[:turn]
-          consecutive = 0
+          chain = 0
           next
         end
 
-        consecutive += 1
-        return true if consecutive == 4
+        chain += 1
+        return true if chain == 4
       end
     end
     false
@@ -383,15 +370,15 @@ class AppModel
         j += 1
       end
 
-      consecutive = 0
+      chain = 0
       left_diagonal.each do |element|
         if element != @state[:turn]
-          consecutive = 0
+          chain = 0
           next
         end
 
-        consecutive += 1
-        return true if consecutive == 4
+        chain += 1
+        return true if chain == 4
       end
     end
     false
@@ -410,15 +397,15 @@ class AppModel
         j -= 1
       end
 
-      consecutive = 0
+      chain = 0
       right_diagonal.each do |element|
         if element != @state[:turn]
-          consecutive = 0
+          chain = 0
           next
         end
 
-        consecutive += 1
-        return true if consecutive == 4
+        chain += 1
+        return true if chain == 4
       end
     end
     false
@@ -426,13 +413,13 @@ class AppModel
 
   def toot_and_otto_horizontal
     @state[:board_data].each do |row|
-      consecutive_toot = ''
-      consecutive_otto = ''
+      chain_toot = ''
+      chain_otto = ''
       row.each do |element|
-        consecutive_toot, consecutive_otto = toot_and_otto_increment(consecutive_toot, consecutive_otto, element)
-        return TIE if consecutive_toot == 'toot' && consecutive_otto == 'otto'
-        return PLAYER_1_WINS if consecutive_toot == 'toot'
-        return PLAYER_2_WINS if consecutive_otto == 'otto'
+        chain_toot, chain_otto = toot_and_otto_increment(chain_toot, chain_otto, element)
+        return TIE if chain_toot == 'toot' && chain_otto == 'otto'
+        return PLAYER_1_WINS if chain_toot == 'toot'
+        return PLAYER_2_WINS if chain_otto == 'otto'
       end
     end
     NO_RESULT_YET
@@ -440,13 +427,13 @@ class AppModel
 
   def toot_and_otto_vertical
     Matrix[*@state[:board_data]].column_vectors.each do |column|
-      consecutive_toot = ''
-      consecutive_otto = ''
+      chain_toot = ''
+      chain_otto = ''
       column.each do |element|
-        consecutive_toot, consecutive_otto = toot_and_otto_increment(consecutive_toot, consecutive_otto, element)
-        return TIE if consecutive_toot == 'toot' && consecutive_otto == 'otto'
-        return PLAYER_1_WINS if consecutive_toot == 'toot'
-        return PLAYER_2_WINS if consecutive_otto == 'otto'
+        chain_toot, chain_otto = toot_and_otto_increment(chain_toot, chain_otto, element)
+        return TIE if chain_toot == 'toot' && chain_otto == 'otto'
+        return PLAYER_1_WINS if chain_toot == 'toot'
+        return PLAYER_2_WINS if chain_otto == 'otto'
       end
     end
     NO_RESULT_YET
@@ -465,13 +452,13 @@ class AppModel
         j += 1
       end
 
-      consecutive_toot = ''
-      consecutive_otto = ''
+      chain_toot = ''
+      chain_otto = ''
       left_diagonal.each do |element|
-        consecutive_toot, consecutive_otto = toot_and_otto_increment(consecutive_toot, consecutive_otto, element)
-        return TIE if consecutive_toot == 'toot' && consecutive_otto == 'otto'
-        return PLAYER_1_WINS if consecutive_toot == 'toot'
-        return PLAYER_2_WINS if consecutive_otto == 'otto'
+        chain_toot, chain_otto = toot_and_otto_increment(chain_toot, chain_otto, element)
+        return TIE if chain_toot == 'toot' && chain_otto == 'otto'
+        return PLAYER_1_WINS if chain_toot == 'toot'
+        return PLAYER_2_WINS if chain_otto == 'otto'
       end
     end
     NO_RESULT_YET
@@ -490,47 +477,47 @@ class AppModel
         j -= 1
       end
 
-      consecutive_toot = ''
-      consecutive_otto = ''
+      chain_toot = ''
+      chain_otto = ''
       right_diagonal.each do |element|
-        consecutive_toot, consecutive_otto = toot_and_otto_increment(consecutive_toot, consecutive_otto, element)
-        return TIE if consecutive_toot == 'toot' && consecutive_otto == 'otto'
-        return PLAYER_1_WINS if consecutive_toot == 'toot'
-        return PLAYER_2_WINS if consecutive_otto == 'otto'
+        chain_toot, chain_otto = toot_and_otto_increment(chain_toot, chain_otto, element)
+        return TIE if chain_toot == 'toot' && chain_otto == 'otto'
+        return PLAYER_1_WINS if chain_toot == 'toot'
+        return PLAYER_2_WINS if chain_otto == 'otto'
       end
     end
     NO_RESULT_YET
   end
 
-  def toot_and_otto_increment(consecutive_toot, consecutive_otto, element)
+  def toot_and_otto_increment(chain_toot, chain_otto, element)
     return ['', ''] if element.zero?
 
     if element == TOKEN_T
-      if ['', 'too'].include?(consecutive_toot)
-        consecutive_toot += 't'
+      if ['', 'too'].include?(chain_toot)
+        chain_toot += 't'
       else
-        consecutive_toot = 't'
+        chain_toot = 't'
       end
 
-      if %w[o ot].include?(consecutive_otto)
-        consecutive_otto += 't'
+      if %w[o ot].include?(chain_otto)
+        chain_otto += 't'
       else
-        consecutive_otto = ''
+        chain_otto = ''
       end
     elsif element == TOKEN_O
-      if %w[t to].include?(consecutive_toot)
-        consecutive_toot += 'o'
+      if %w[t to].include?(chain_toot)
+        chain_toot += 'o'
       else
-        consecutive_toot = ''
+        chain_toot = ''
       end
 
-      if ['', 'ott'].include?(consecutive_otto)
-        consecutive_otto += 'o'
+      if ['', 'ott'].include?(chain_otto)
+        chain_otto += 'o'
       else
-        consecutive_otto = 'o'
+        chain_otto = 'o'
       end
     end
 
-    [consecutive_toot, consecutive_otto]
+    [chain_toot, chain_otto]
   end
 end
