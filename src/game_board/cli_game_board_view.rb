@@ -28,10 +28,8 @@ class CLIGameBoardView
   end
 
   def draw(state)
-    settings = state[:settings]
-
-    (0..(settings[:board_columns] - 1)).each do |col|
-      (0..(settings[:board_rows] - 1)).each do |row|
+    (0..(state[:board_columns] - 1)).each do |col|
+      (0..(state[:board_rows] - 1)).each do |row|
         if (state[:board_data][row][col]).zero?
           @rows[row][col * 2] = '_'
         elsif state[:board_data][row][col] == 1 && state[:type] == AppModel::CONNECT_4
