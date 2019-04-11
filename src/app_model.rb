@@ -61,6 +61,8 @@ class AppModel
       phase: MENU,
       board_data: Array.new(6) { Array.new(7, 0) },
       result: NO_RESULT_YET,
+      player_1_username: '',
+      player_2_username: '',
       player_1_t: 6,
       player_1_o: 6,
       player_2_t: 6,
@@ -147,20 +149,22 @@ class AppModel
     update_game_phase(IN_PROGRESS)
   end
 
+  # A league game is a game that is recorded in the league table
   def start_league_game(username_1, username_2)
-    puts(username_1, username_2)
+    @state[:player_1_username] = username_1
+    @state[:player_2_username] = username_2
     # TODO: Implement
   end
 
   def host_game(username, game_code)
-    puts(username, game_code)
+    @state[:player_1_username] = username
     response = Net::HTTP.get_response(URI(@server_address + "host_game/#{username}/#{game_code}"))
     puts(JSON.parse(response.body))
     # TODO: Implement
   end
 
   def join_game(username, game_code)
-    puts(username, game_code)
+    @state[:player_2_username] = username
     # TODO: Implement
   end
 
