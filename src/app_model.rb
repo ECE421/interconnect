@@ -1,4 +1,6 @@
+require 'json'
 require 'matrix'
+require 'net/http'
 require 'observer'
 
 # Main model that holds the data, state, and business logic of the app
@@ -47,6 +49,8 @@ class AppModel
   HARD = 0
 
   def initialize(app, presenter, interface = GUI)
+    @server_address = 'https://interconnect4-server.herokuapp.com/'
+
     # Initial game state
     @state = {
       interface: interface,
@@ -150,6 +154,8 @@ class AppModel
 
   def host_game(username, game_code)
     puts(username, game_code)
+    response = Net::HTTP.get_response(URI(@server_address + "host_game/#{username}/#{game_code}"))
+    puts(JSON.parse(response.body))
     # TODO: Implement
   end
 
