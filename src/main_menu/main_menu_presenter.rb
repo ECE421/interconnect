@@ -4,15 +4,18 @@ class MainMenuPresenter
     @model = model
   end
 
-  def update(signal, data)
-    if signal == 'game_type_changed'
-      @model.update_game_type(data)
-    elsif signal == 'game_mode_changed'
-      @model.update_game_mode(data)
-    elsif signal == 'start_game'
+  def update(signal, *data)
+    case signal
+    when 'game_type_changed'
+      @model.update_game_type(data[0])
+    when 'game_network_changed'
+      @model.update_game_network(data[0])
+    when 'game_mode_changed'
+      @model.update_game_mode(data[0])
+    when 'start_game'
       @model.start_game
     else
-      raise ArgumentError
+      raise(ArgumentError)
     end
   end
 end

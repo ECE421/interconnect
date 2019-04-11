@@ -9,7 +9,11 @@ class MainMenuView
     @window = window # Reference to the application window
   end
 
-  def draw(type, mode)
+  def draw(state)
+    type = state[:type]
+    network = state[:network]
+    mode = state[:mode]
+
     layout = Gtk::FlowBox.new
     layout.valign = :start
     layout.max_children_per_line = 1
@@ -28,6 +32,16 @@ class MainMenuView
     end
     layout.add(game_type_combo_box)
 
+    game_network_combo_box = Gtk::ComboBoxText.new
+    game_network_combo_box.append_text('Local Game')
+    game_network_combo_box.append_text('Distributed Game')
+    game_network_combo_box.set_active(network)
+    game_network_combo_box.signal_connect('changed') do |_, _|
+      changed
+      notify_observers('game_network_changed', game_network_combo_box.active)
+    end
+    layout.add(game_network_combo_box)
+
     game_mode_combo_box = Gtk::ComboBoxText.new
     game_mode_combo_box.append_text('Player vs. Player')
     game_mode_combo_box.append_text('Player vs. CPU')
@@ -44,7 +58,7 @@ class MainMenuView
     start_game_button = Gtk::Button.new(label: 'Start Game')
     start_game_button.signal_connect('clicked') do |_, _|
       changed
-      notify_observers('start_game', nil)
+      notify_observers('start_game')
     end
     layout.add(start_game_button)
 

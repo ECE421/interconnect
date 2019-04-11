@@ -19,6 +19,10 @@ class AppModel
   CONNECT_4 = 0
   TOOT_AND_OTTO = 1
 
+  # Game networks
+  LOCAL = 0
+  DISTRIBUTED = 1
+
   # Game modes
   PLAYER_PLAYER = 0
   PLAYER_CPU = 1
@@ -52,6 +56,7 @@ class AppModel
       turn: PLAYER_1_TURN,
       player_turn: true,
       type: CONNECT_4,
+      network: LOCAL,
       mode: PLAYER_PLAYER,
       phase: MENU,
       board_data: Array.new(6) { Array.new(7, 0) },
@@ -125,6 +130,12 @@ class AppModel
     end
     changed
     notify_observers('game_type_updated', @state)
+  end
+
+  def update_game_network(network)
+    @state[:network] = network
+    changed
+    notify_observers('game_network_changed', @state)
   end
 
   def update_game_mode(mode)
