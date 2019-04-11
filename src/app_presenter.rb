@@ -23,8 +23,6 @@ class AppPresenter
       game_phase_updated(data[0])
     when 'game_type_updated'
       redraw_main_menu(data[0])
-    when 'game_network_changed'
-      redraw_main_menu(data[0])
     when 'game_mode_updated'
       redraw_main_menu(data[0])
     else

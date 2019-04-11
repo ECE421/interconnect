@@ -14,6 +14,12 @@ class GameBoardView
     @empty_cell_style = Gtk::CssProvider.new
     @empty_cell_style.load(data: 'button {background-image: image(white);}')
 
+    @player_1_token_style = Gtk::CssProvider.new
+    @player_1_token_style.load(data: "button {background-image: image(#FF0000);}")
+
+    @player_2_token_style = Gtk::CssProvider.new
+    @player_2_token_style.load(data: "button {background-image: image(#FFFF00);}")
+
     @t_style = Gtk::CssProvider.new
     @t_style.load(data: 'button {background-image: url("./src/game_board/t.png");}')
 
@@ -29,12 +35,6 @@ class GameBoardView
 
   # This method is called at the start of a each game
   def init_layout(state)
-    @player_1_token_style = Gtk::CssProvider.new
-    @player_1_token_style.load(data: "button {background-image: image(#{state[:player_1_colour]});}")
-
-    @player_2_token_style = Gtk::CssProvider.new
-    @player_2_token_style.load(data: "button {background-image: image(#{state[:player_2_colour]});}")
-
     @cells = Array.new(state[:board_rows]) { Array.new(state[:board_columns], nil) }
     @layout = Gtk::Fixed.new
 
@@ -106,9 +106,9 @@ class GameBoardView
   def draw(state)
     if state[:type] == AppModel::CONNECT_4
       if state[:turn] == AppModel::PLAYER_1_TURN
-        @turn_indicator.set_markup("<span foreground='#{state[:player_1_colour]}'>Player 1's Turn:</span>")
+        @turn_indicator.set_markup("<span>Player 1's Turn (Red):</span>")
       elsif state[:turn] == AppModel::PLAYER_2_TURN
-        @turn_indicator.set_markup("<span foreground='#{state[:player_2_colour]}'>Player 2's Turn:</span>")
+        @turn_indicator.set_markup("<span>Player 2's Turn (Yellow):</span>")
       end
     elsif state[:type] == AppModel::TOOT_AND_OTTO
       if state[:turn] == AppModel::PLAYER_1_TURN
