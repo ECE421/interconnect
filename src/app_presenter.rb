@@ -22,9 +22,9 @@ class AppPresenter
     when 'game_phase_updated'
       game_phase_updated(data[0])
     when 'game_type_updated'
-      game_type_updated(data[0])
+      redraw_main_menu(data[0])
     when 'game_mode_updated'
-      game_mode_updated(data[0])
+      redraw_main_menu(data[0])
     else
       raise(ArgumentError)
     end
@@ -62,24 +62,17 @@ class AppPresenter
     @window.each { |child| @window.remove(child) } if state[:interface] == AppModel::GUI
 
     if state[:phase] == AppModel::MENU
-      @main_menu_view.draw(state[:type], state[:mode])
+      @main_menu_view.draw(state)
     elsif state[:phase] == AppModel::IN_PROGRESS || state[:phase] == AppModel::GAME_OVER
       @game_board_view.init_layout(state)
       @game_board_view.draw(state)
     end
   end
 
-  def game_type_updated(state)
+  def redraw_main_menu(state)
     return unless state[:interface] == AppModel::GUI
 
     @window.each { |child| @window.remove(child) }
-    @main_menu_view.draw(state[:type], state[:mode])
-  end
-
-  def game_mode_updated(state)
-    return unless state[:interface] == AppModel::GUI
-
-    @window.each { |child| @window.remove(child) }
-    @main_menu_view.draw(state[:type], state[:mode])
+    @main_menu_view.draw(state)
   end
 end

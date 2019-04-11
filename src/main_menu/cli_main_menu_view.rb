@@ -4,7 +4,7 @@ require 'observer'
 class CLIMainMenuView
   include(Observable)
 
-  def draw(_type, _mode)
+  def draw(_state)
     puts('Which game type?')
     puts('Options: Connect 4 (0) or Toot and Otto (1)')
     valid_type = false
@@ -36,6 +36,6 @@ class CLIMainMenuView
     end
 
     changed
-    notify_observers('start_game', nil)
+    notify_observers('start_game')
   end
 end

@@ -20,10 +20,11 @@ class AppModel
   TOOT_AND_OTTO = 1
 
   # Game modes
-  PLAYER_PLAYER = 0
-  PLAYER_CPU = 1
-  CPU_PLAYER = 2
-  CPU_CPU = 3
+  PLAYER_PLAYER_LOCAL = 0
+  PLAYER_PLAYER_DISTRIBUTED = 1
+  PLAYER_CPU = 2
+  CPU_PLAYER = 3
+  CPU_CPU = 4
 
   # Game phases
   MENU = 0
@@ -52,7 +53,7 @@ class AppModel
       turn: PLAYER_1_TURN,
       player_turn: true,
       type: CONNECT_4,
-      mode: PLAYER_PLAYER,
+      mode: PLAYER_PLAYER_LOCAL,
       phase: MENU,
       board_data: Array.new(6) { Array.new(7, 0) },
       result: NO_RESULT_YET,
@@ -63,8 +64,6 @@ class AppModel
       board_columns: 7,
       board_rows: 6,
       active_token: TOKEN_T,
-      player_1_colour: '#FF0000',
-      player_2_colour: '#FFFF00',
       cpu_difficulty: EASY
     }
 
@@ -77,7 +76,7 @@ class AppModel
       @app.signal_connect('activate') do |application|
         window = Gtk::ApplicationWindow.new(application)
         window.set_title('Ruby Connect Games')
-        window.set_size_request(400, 400)
+        window.set_size_request(600, 600)
         window.set_border_width(20)
 
         changed
@@ -142,6 +141,21 @@ class AppModel
 
   def start_game
     update_game_phase(IN_PROGRESS)
+  end
+
+  def start_league_game(username_1, username_2)
+    puts(username_1, username_2)
+    # TODO: Implement
+  end
+
+  def host_game(username, game_code)
+    puts(username, game_code)
+    # TODO: Implement
+  end
+
+  def join_game(username, game_code)
+    puts(username, game_code)
+    # TODO: Implement
   end
 
   def back_to_main_menu

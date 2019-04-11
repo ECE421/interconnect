@@ -9,11 +9,15 @@ class MainMenuView
     @window = window # Reference to the application window
   end
 
-  def draw(type, mode)
+  def draw(state)
+    type = state[:type]
+    mode = state[:mode]
+
     layout = Gtk::FlowBox.new
     layout.valign = :start
     layout.max_children_per_line = 1
     layout.selection_mode = :none
+    layout.set_row_spacing(10)
 
     title = Gtk::Label.new('Ruby Connect Games')
     layout.add(title)
@@ -29,10 +33,11 @@ class MainMenuView
     layout.add(game_type_combo_box)
 
     game_mode_combo_box = Gtk::ComboBoxText.new
-    game_mode_combo_box.append_text('Player vs. Player')
-    game_mode_combo_box.append_text('Player vs. CPU')
-    game_mode_combo_box.append_text('CPU vs. Player')
-    game_mode_combo_box.append_text('CPU vs. CPU')
+    game_mode_combo_box.append_text('Player vs. Player (Local)')
+    game_mode_combo_box.append_text('Player vs. Player (Distributed)')
+    game_mode_combo_box.append_text('Player vs. CPU (Local)')
+    game_mode_combo_box.append_text('CPU vs. Player (Local)')
+    game_mode_combo_box.append_text('CPU vs. CPU (Local)')
 
     game_mode_combo_box.set_active(mode)
     game_mode_combo_box.signal_connect('changed') do |_, _|
@@ -41,12 +46,87 @@ class MainMenuView
     end
     layout.add(game_mode_combo_box)
 
-    start_game_button = Gtk::Button.new(label: 'Start Game')
-    start_game_button.signal_connect('clicked') do |_, _|
-      changed
-      notify_observers('start_game', nil)
+    horizontal_separator = Gtk::Separator.new(:horizontal)
+    layout.add(horizontal_separator)
+
+    player_1_label = Gtk::Label.new('Player 1:')
+    player_1_username_label = Gtk::Label.new('Username:')
+    player_1_username_entry = Gtk::Entry.new
+
+    if mode == AppModel::PLAYER_PLAYER_LOCAL
+      layout.add(player_1_label)
+      player_1_username_box = Gtk::Box.new(:horizontal, 10)
+      player_1_username_box.add(player_1_username_label)
+      player_1_username_box.add(player_1_username_entry)
+      player_1_username_box.set_child_packing(player_1_username_entry, :expand => true)
+      layout.add(player_1_username_box)
+
+      horizontal_separator = Gtk::Separator.new(:horizontal)
+      layout.add(horizontal_separator)
+
+      player_2_label = Gtk::Label.new('Player 2:')
+      player_2_username_label = Gtk::Label.new('Username:')
+      player_2_username_entry = Gtk::Entry.new
+
+      layout.add(player_2_label)
+      player_2_username_box = Gtk::Box.new(:horizontal, 10)
+      player_2_username_box.add(player_2_username_label)
+      player_2_username_box.add(player_2_username_entry)
+      player_2_username_box.set_child_packing(player_2_username_entry, :expand => true)
+      layout.add(player_2_username_box)
+
+      horizontal_separator = Gtk::Separator.new(:horizontal)
+      layout.add(horizontal_separator)
+
+      start_game_button = Gtk::Button.new(label: 'Start League Game')
+      start_game_button.signal_connect('clicked') do |_, _|
+        changed
+        notify_observers('start_league_game', player_1_username_entry.text, player_2_username_entry.text)
+      end
+      layout.add(start_game_button)
+    elsif mode == AppModel::PLAYER_PLAYER_DISTRIBUTED
+      layout.add(player_1_label)
+      player_1_username_box = Gtk::Box.new(:horizontal, 10)
+      player_1_username_box.add(player_1_username_label)
+      player_1_username_box.add(player_1_username_entry)
+      player_1_username_box.set_child_packing(player_1_username_entry, :expand => true)
+      layout.add(player_1_username_box)
+
+      horizontal_separator = Gtk::Separator.new(:horizontal)
+      layout.add(horizontal_separator)
+
+      game_code_label = Gtk::Label.new('Game code:')
+      game_code_entry = Gtk::Entry.new
+      game_code_box = Gtk::Box.new(:horizontal, 10)
+      game_code_box.add(game_code_label)
+      game_code_box.add(game_code_entry)
+      game_code_box.set_child_packing(game_code_entry, :expand => true)
+      layout.add(game_code_box)
+
+      host_game_button = Gtk::Button.new(label: 'Host Game')
+      host_game_button.signal_connect('clicked') do |_, _|
+        changed
+        notify_observers('host_game', player_1_username_entry.text, game_code_entry.text)
+      end
+      join_game_button = Gtk::Button.new(label: 'Join Game')
+      join_game_button.signal_connect('clicked') do |_, _|
+        changed
+        notify_observers('join_game', player_1_username_entry.text, game_code_entry.text)
+      end
+      game_button_box = Gtk::Box.new(:horizontal, 10)
+      game_button_box.add(host_game_button)
+      game_button_box.set_child_packing(host_game_button, :expand => true)
+      game_button_box.add(join_game_button)
+      game_button_box.set_child_packing(join_game_button, :expand => true)
+      layout.add(game_button_box)
+    else
+      start_game_button = Gtk::Button.new(label: 'Start Game')
+      start_game_button.signal_connect('clicked') do |_, _|
+        changed
+        notify_observers('start_game')
+      end
+      layout.add(start_game_button)
     end
-    layout.add(start_game_button)
 
     @window.add(layout)
     @window.show_all
