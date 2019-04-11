@@ -153,6 +153,7 @@ class AppModel
   def start_league_game(username_1, username_2)
     @state[:player_1_username] = username_1
     @state[:player_2_username] = username_2
+    update_game_phase(IN_PROGRESS)
     # TODO: Implement
   end
 
@@ -324,16 +325,24 @@ class AppModel
   end
 
   def toot_and_otto_game_result
-    result = toot_and_otto_horizontal
-    return result unless result == NO_RESULT_YET
+    horizontal_result = toot_and_otto_horizontal
+    vertical_result = toot_and_otto_vertical
+    left_diagonal_result = toot_and_otto_left_diagonal
+    right_diagonal_result = toot_and_otto_right_diagonal
+    all_results = [horizontal_result, vertical_result, left_diagonal_result, right_diagonal_result]
 
-    result = toot_and_otto_vertical
-    return result unless result == NO_RESULT_YET
+    player_1_wins = all_results.count(PLAYER_1_WINS)
+    player_2_wins = all_results.count(PLAYER_2_WINS)
 
-    result = toot_and_otto_left_diagonal
-    return result unless result == NO_RESULT_YET
-
-    toot_and_otto_right_diagonal
+    if player_1_wins > 0 && player_2_wins > 0
+      TIE
+    elsif player_1_wins > 0
+      PLAYER_1_WINS
+    elsif player_2_wins > 0
+      PLAYER_2_WINS
+    else
+      NO_RESULT_YET
+    end
   end
 
   def connect_4_tie?
