@@ -20,7 +20,7 @@ class AppPresenter
     when 'init_views'
       init_views(data[0], data[1])
     when 'turn_updated'
-      turn_updated(data[0])
+      turn_updated(data[0], data[1])
     when 'game_phase_updated'
       game_phase_updated(data[0])
     when 'game_type_updated'
@@ -64,8 +64,8 @@ class AppPresenter
     @game_board_view.add_observer(@game_board_presenter)
   end
 
-  def turn_updated(state)
-    @game_board_view.draw(state)
+  def turn_updated(state, my_turn)
+    @game_board_view.draw(state, my_turn)
   end
 
   def game_phase_updated(state)
@@ -75,7 +75,6 @@ class AppPresenter
       @main_menu_view.draw(state)
     elsif state[:phase] == AppModel::IN_PROGRESS || state[:phase] == AppModel::GAME_OVER
       @game_board_view.init_layout(state)
-      @game_board_view.draw(state)
     end
   end
 

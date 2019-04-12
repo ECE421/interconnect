@@ -14,6 +14,9 @@ class GameBoardView
     @empty_cell_style = Gtk::CssProvider.new
     @empty_cell_style.load(data: 'button {background-image: image(white);}')
 
+    @mask_style = Gtk::CssProvider.new
+    @mask_style.load(data: 'button {background-image: image(grey); opacity: 0.5;}')
+
     @player_1_token_style = Gtk::CssProvider.new
     @player_1_token_style.load(data: "button {background-image: image(#FF0000);}")
 
@@ -97,12 +100,8 @@ class GameBoardView
       notify_observers('main_menu_clicked')
     end
 
-    @token_button_box = Gtk::Box.new(:horizontal, 10)
-
-    if state[:type] == AppModel::CONNECT_4
-      @layout.remove(@tokens_indicator)
-      @layout.remove(@token_button_box)
-    elsif state[:type] == AppModel::TOOT_AND_OTTO
+    if state[:type] == AppModel::TOOT_AND_OTTO
+      @token_button_box = Gtk::Box.new(:horizontal, 10)
       @layout.add(@tokens_indicator)
       @token_button_box.add(@t_button)
       @token_button_box.add(@o_button)
@@ -112,7 +111,7 @@ class GameBoardView
     @window.add(@layout)
   end
 
-  def draw(state)
+  def draw(state, my_turn)
     if state[:type] == AppModel::CONNECT_4
       if state[:turn] == AppModel::PLAYER_1_TURN
         @turn_indicator.set_markup("<span>Player 1's Turn (Red):</span>")
@@ -160,7 +159,20 @@ class GameBoardView
       @layout.add(@main_menu_button)
     end
 
+    if state[:mode] == AppModel::PLAYER_PLAYER_DISTRIBUTED && state[:turn] != my_turn
+      mask = Gtk::Button.new(label: 'Please wait for your turn...')
+      mask.set_size_request(100 * state[:board_columns], 100 * state[:board_rows])
+      mask.style_context.add_provider(@mask_style, Gtk::StyleProvider::PRIORITY_USER)
+      @fixed_layout.put(mask, 0, 0)
+    end
+
     @window.show_all
+
+    if state[:mode] == AppModel::PLAYER_PLAYER_DISTRIBUTED && state[:turn] != my_turn
+      sleep(1)
+      changed
+      notify_observers('try_update_turn')
+    end
 
     unless state[:player_turn]
       changed

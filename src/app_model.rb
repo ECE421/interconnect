@@ -77,6 +77,8 @@ class AppModel
       error_message: ''
     }
 
+    @my_turn = nil
+
     add_observer(presenter)
     changed
     notify_observers('attach_model', self)
@@ -103,22 +105,27 @@ class AppModel
   end
 
   def update_turn(turn)
-    @state[:turn] = turn
+    if @state[:mode] == PLAYER_PLAYER_DISTRIBUTED
+      response = Net::HTTP.get_response(URI(@server_address + "game?_id=#{@state[:_id]}"))
+      puts(response.body)
+    else
+      @state[:turn] = turn
 
-    if @state[:turn] == PLAYER_1_TURN && @state[:mode] == PLAYER_CPU
-      @state[:player_turn] = true
-    elsif @state[:turn] == PLAYER_2_TURN && @state[:mode] == PLAYER_CPU
-      @state[:player_turn] = false
+      if @state[:turn] == PLAYER_1_TURN && @state[:mode] == PLAYER_CPU
+        @state[:player_turn] = true
+      elsif @state[:turn] == PLAYER_2_TURN && @state[:mode] == PLAYER_CPU
+        @state[:player_turn] = false
+      end
+
+      if @state[:turn] == PLAYER_1_TURN && @state[:mode] == CPU_PLAYER
+        @state[:player_turn] = false
+      elsif @state[:turn] == PLAYER_2_TURN && @state[:mode] == CPU_PLAYER
+        @state[:player_turn] = true
+      end
+
+      changed
+      notify_observers('turn_updated', @state, @my_turn)
     end
-
-    if @state[:turn] == PLAYER_1_TURN && @state[:mode] == CPU_PLAYER
-      @state[:player_turn] = false
-    elsif @state[:turn] == PLAYER_2_TURN && @state[:mode] == CPU_PLAYER
-      @state[:player_turn] = true
-    end
-
-    changed
-    notify_observers('turn_updated', @state)
   end
 
   def update_game_type(type)
@@ -166,9 +173,10 @@ class AppModel
     @state[:hosting] = true
     @state[:username_1] = username
     @state[:_id] = game_code
+    @my_turn = PLAYER_1_TURN
 
     response = Net::HTTP.post(
-      URI(@server_address + "create_game"),
+      URI(@server_address + 'create_game'),
       @state.to_json,
       'Content-Type' => 'application/json'
     )
@@ -183,8 +191,20 @@ class AppModel
   end
 
   def join_game(username, game_code)
-    @state[:username_2] = username
-    # TODO: Implement
+    @my_turn = PLAYER_2_TURN
+    response = Net::HTTP.post(
+      URI(@server_address + "join_game?game_id=#{game_code}&username=#{username}"),
+      @state.to_json,
+      'Content-Type' => 'application/json'
+    )
+
+    if response.body.start_with?('Failure')
+      @state[:error_message] = response.body
+      changed
+      notify_observers('error', @state)
+    else
+      puts(response.body)
+    end
   end
 
   def view_leaderboard
@@ -205,6 +225,9 @@ class AppModel
     @state[:error_message] = ''
     changed
     notify_observers('game_phase_updated', @state)
+    if @state[:phase] == IN_PROGRESS || @state[:phase] == GAME_OVER
+      update_turn(@state[:turn])
+    end
   end
 
   def place_token(column_index)
@@ -374,9 +397,17 @@ class AppModel
 
   def toot_and_otto_game_result
     horizontal_result = toot_and_otto_horizontal
+    return horizontal_result if horizontal_result == TIE
+
     vertical_result = toot_and_otto_vertical
+    return vertical_result if vertical_result == TIE
+
     left_diagonal_result = toot_and_otto_left_diagonal
+    return left_diagonal_result if left_diagonal_result == TIE
+
     right_diagonal_result = toot_and_otto_right_diagonal
+    return right_diagonal_result if right_diagonal_result == TIE
+
     all_results = [horizontal_result, vertical_result, left_diagonal_result, right_diagonal_result]
 
     player_1_wins = all_results.count(PLAYER_1_WINS)
@@ -494,28 +525,20 @@ class AppModel
 
   def toot_and_otto_horizontal
     @state[:board_data].each do |row|
-      chain_toot = ''
-      chain_otto = ''
-      row.each do |element|
-        chain_toot, chain_otto = toot_and_otto_increment(chain_toot, chain_otto, element)
-        return TIE if chain_toot == 'toot' && chain_otto == 'otto'
-        return PLAYER_1_WINS if chain_toot == 'toot'
-        return PLAYER_2_WINS if chain_otto == 'otto'
-      end
+      row_string = row.map { |elem| elem.to_s }.join
+      return TIE if row_string.include?('1221') && row_string.include?('2112')
+      return PLAYER_1_WINS if row_string.include?('1221')
+      return PLAYER_2_WINS if row_string.include?('2112')
     end
     NO_RESULT_YET
   end
 
   def toot_and_otto_vertical
     Matrix[*@state[:board_data]].column_vectors.each do |column|
-      chain_toot = ''
-      chain_otto = ''
-      column.each do |element|
-        chain_toot, chain_otto = toot_and_otto_increment(chain_toot, chain_otto, element)
-        return TIE if chain_toot == 'toot' && chain_otto == 'otto'
-        return PLAYER_1_WINS if chain_toot == 'toot'
-        return PLAYER_2_WINS if chain_otto == 'otto'
-      end
+      column_string = column.to_a.map { |elem| elem.to_s }.join
+      return TIE if column_string.include?('1221') && column_string.include?('2112')
+      return PLAYER_1_WINS if column_string.include?('1221')
+      return PLAYER_2_WINS if column_string.include?('2112')
     end
     NO_RESULT_YET
   end
@@ -533,14 +556,10 @@ class AppModel
         j += 1
       end
 
-      chain_toot = ''
-      chain_otto = ''
-      left_diagonal.each do |element|
-        chain_toot, chain_otto = toot_and_otto_increment(chain_toot, chain_otto, element)
-        return TIE if chain_toot == 'toot' && chain_otto == 'otto'
-        return PLAYER_1_WINS if chain_toot == 'toot'
-        return PLAYER_2_WINS if chain_otto == 'otto'
-      end
+      left_diagonal_string = left_diagonal.map { |elem| elem.to_s }.join
+      return TIE if left_diagonal_string.include?('1221') && left_diagonal_string.include?('2112')
+      return PLAYER_1_WINS if left_diagonal_string.include?('1221')
+      return PLAYER_2_WINS if left_diagonal_string.include?('2112')
     end
     NO_RESULT_YET
   end
@@ -558,47 +577,11 @@ class AppModel
         j -= 1
       end
 
-      chain_toot = ''
-      chain_otto = ''
-      right_diagonal.each do |element|
-        chain_toot, chain_otto = toot_and_otto_increment(chain_toot, chain_otto, element)
-        return TIE if chain_toot == 'toot' && chain_otto == 'otto'
-        return PLAYER_1_WINS if chain_toot == 'toot'
-        return PLAYER_2_WINS if chain_otto == 'otto'
-      end
+      right_diagonal_string = right_diagonal.map { |elem| elem.to_s }.join
+      return TIE if right_diagonal_string.include?('1221') && right_diagonal_string.include?('2112')
+      return PLAYER_1_WINS if right_diagonal_string.include?('1221')
+      return PLAYER_2_WINS if right_diagonal_string.include?('2112')
     end
     NO_RESULT_YET
-  end
-
-  def toot_and_otto_increment(chain_toot, chain_otto, element)
-    return ['', ''] if element.zero?
-
-    if element == TOKEN_T
-      if ['', 'too'].include?(chain_toot)
-        chain_toot += 't'
-      else
-        chain_toot = 't'
-      end
-
-      if %w[o ot].include?(chain_otto)
-        chain_otto += 't'
-      else
-        chain_otto = ''
-      end
-    elsif element == TOKEN_O
-      if %w[t to].include?(chain_toot)
-        chain_toot += 'o'
-      else
-        chain_toot = ''
-      end
-
-      if ['', 'ott'].include?(chain_otto)
-        chain_otto += 'o'
-      else
-        chain_otto = 'o'
-      end
-    end
-
-    [chain_toot, chain_otto]
   end
 end

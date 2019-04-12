@@ -17,6 +17,8 @@ class GameBoardPresenter
       @model.update_active_token(AppModel::TOKEN_O)
     when 'cpu_turn'
       @model.cpu_turn
+    when 'try_update_turn'
+      @model.update_turn
     else
       raise(ArgumentError)
     end
