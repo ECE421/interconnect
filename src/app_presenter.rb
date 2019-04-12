@@ -29,6 +29,8 @@ class AppPresenter
       redraw_main_menu(data[0])
     when 'view_leaderboard'
       view_leaderboard(data[0])
+    when 'error'
+      redraw_main_menu(data[0])
     else
       raise(ArgumentError)
     end

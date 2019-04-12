@@ -135,6 +135,10 @@ class MainMenuView
     end
     layout.add(view_leaderboard_button)
 
+    error_label = Gtk::Label.new
+    error_label.set_markup("<span foreground='#FF0000'>#{state[:error_message]}</span>")
+    layout.add(error_label)
+
     @window.add(layout)
     @window.show_all
   end

@@ -54,6 +54,7 @@ class AppModel
 
     # Initial game state
     @state = {
+      _id: nil,
       interface: interface,
       turn: PLAYER_1_TURN,
       player_turn: true,
@@ -72,7 +73,8 @@ class AppModel
       board_columns: 7,
       board_rows: 6,
       active_token: TOKEN_T,
-      cpu_difficulty: EASY
+      cpu_difficulty: EASY,
+      error_message: ''
     }
 
     add_observer(presenter)
@@ -121,6 +123,7 @@ class AppModel
 
   def update_game_type(type)
     @state[:type] = type
+    @state[:error_message] = ''
     if @state[:type] == CONNECT_4
       @state[:board_columns] = 7
       @state[:board_rows] = 6
@@ -137,6 +140,7 @@ class AppModel
   def update_game_mode(mode)
     @state[:mode] = mode
     @state[:player_turn] = (mode != CPU_PLAYER && mode != CPU_CPU)
+    @state[:error_message] = ''
 
     changed
     notify_observers('game_mode_updated', @state)
@@ -162,9 +166,21 @@ class AppModel
   def host_game(username, game_code)
     @state[:hosting] = true
     @state[:username_1] = username
-    response = Net::HTTP.get_response(URI(@server_address + "host_game/#{username}/#{game_code}"))
-    puts(JSON.parse(response.body))
-    # TODO: Implement
+    @state[:_id] = game_code
+
+    response = Net::HTTP.post(
+      URI(@server_address + "create_game"),
+      @state.to_json,
+      'Content-Type' => 'application/json'
+    )
+
+    if response.body == 'Success'
+      update_game_phase(IN_PROGRESS)
+    else
+      @state[:error_message] = response.body
+      changed
+      notify_observers('error', @state)
+    end
   end
 
   def join_game(username, game_code)
@@ -187,6 +203,7 @@ class AppModel
 
   def update_game_phase(phase)
     @state[:phase] = phase
+    @state[:error_message] = ''
     changed
     notify_observers('game_phase_updated', @state)
   end
