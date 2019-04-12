@@ -78,6 +78,9 @@ class MainMenuView
       horizontal_separator = Gtk::Separator.new(:horizontal)
       layout.add(horizontal_separator)
 
+      # TODO: Game code entry
+      # TODO: Load game button
+
       start_game_button = Gtk::Button.new(label: 'Start Game')
       start_game_button.signal_connect('clicked') do |_, _|
         changed

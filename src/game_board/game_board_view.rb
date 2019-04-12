@@ -36,7 +36,7 @@ class GameBoardView
   # This method is called at the start of a each game
   def init_layout(state)
     @cells = Array.new(state[:board_rows]) { Array.new(state[:board_columns], nil) }
-    @layout = Gtk::Fixed.new
+    @layout = Gtk::Fixed.new # TODO: Try to move to an adaptive layout (to minimize hardcoded positioning)
 
     @turn_indicator = Gtk::Label.new
     @layout.put(@turn_indicator, 0, 0)
@@ -158,6 +158,8 @@ class GameBoardView
       @layout.remove(@winner)
       @layout.remove(@main_menu_button)
     end
+
+    # TODO: Save game button
 
     @window.show_all
 
