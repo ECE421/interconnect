@@ -36,13 +36,20 @@ class GameBoardView
   # This method is called at the start of a each game
   def init_layout(state)
     @cells = Array.new(state[:board_rows]) { Array.new(state[:board_columns], nil) }
-    @layout = Gtk::Fixed.new # TODO: Try to move to an adaptive layout (to minimize hardcoded positioning)
+    @layout = Gtk::FlowBox.new
+    @layout.valign = :start
+    @layout.max_children_per_line = 1
+    @layout.selection_mode = :none
+    @layout.set_row_spacing(10)
 
     @turn_indicator = Gtk::Label.new
-    @layout.put(@turn_indicator, 0, 0)
+    @layout.add(@turn_indicator)
+
+    @fixed_layout = Gtk::Fixed.new
+    @layout.add(@fixed_layout)
 
     cell_grid = Gtk::Grid.new
-    @layout.put(cell_grid, 0, 40)
+    @fixed_layout.put(cell_grid, 0, 40)
 
     (0..(state[:board_columns] - 1)).each do |col|
       (0..(state[:board_rows] - 1)).each do |row|
@@ -54,7 +61,7 @@ class GameBoardView
     end
 
     column_grid = Gtk::Grid.new
-    @layout.put(column_grid, 0, 40)
+    @fixed_layout.put(column_grid, 0, 40)
 
     (0..(state[:board_columns] - 1)).each do |column_index|
       column = Gtk::Button.new
@@ -90,14 +97,16 @@ class GameBoardView
       notify_observers('main_menu_clicked')
     end
 
+    @token_button_box = Gtk::Box.new(:horizontal, 10)
+
     if state[:type] == AppModel::CONNECT_4
       @layout.remove(@tokens_indicator)
-      @layout.remove(@t_button)
-      @layout.remove(@o_button)
+      @layout.remove(@token_button_box)
     elsif state[:type] == AppModel::TOOT_AND_OTTO
-      @layout.put(@tokens_indicator, 0, 100 * state[:board_rows] + 60)
-      @layout.put(@t_button, 0, 100 * state[:board_rows] + 100)
-      @layout.put(@o_button, 100, 100 * state[:board_rows] + 100)
+      @layout.add(@tokens_indicator)
+      @token_button_box.add(@t_button)
+      @token_button_box.add(@o_button)
+      @layout.add(@token_button_box)
     end
 
     @window.add(@layout)
@@ -147,19 +156,9 @@ class GameBoardView
     if state[:phase] == AppModel::GAME_OVER
       winner = state[:result]
       @winner.set_markup(winner == AppModel::TIE ? "<span>It's a tie!</span>" : "<span>Player #{winner} wins!</span>")
-      if state[:type] == AppModel::CONNECT_4
-        @layout.put(@winner, 0, 100 * state[:board_rows] + 60)
-        @layout.put(@main_menu_button, 0, 100 * state[:board_rows] + 100)
-      elsif state[:type] == AppModel::TOOT_AND_OTTO
-        @layout.put(@winner, 0, 100 * state[:board_rows] + 200)
-        @layout.put(@main_menu_button, 0, 100 * state[:board_rows] + 240)
-      end
-    else
-      @layout.remove(@winner)
-      @layout.remove(@main_menu_button)
+      @layout.add(@winner)
+      @layout.add(@main_menu_button)
     end
-
-    # TODO: Save game button
 
     @window.show_all
 

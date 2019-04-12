@@ -160,7 +160,6 @@ class AppModel
     @state[:username_1] = username_1
     @state[:username_2] = username_2
     update_game_phase(IN_PROGRESS)
-    # TODO: Implement
   end
 
   def host_game(username, game_code)
