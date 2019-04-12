@@ -1,3 +1,4 @@
+require 'bson'
 require 'json'
 require 'matrix'
 require 'net/http'
@@ -61,8 +62,9 @@ class AppModel
       phase: MENU,
       board_data: Array.new(6) { Array.new(7, 0) },
       result: NO_RESULT_YET,
-      player_1_username: '',
-      player_2_username: '',
+      hosting: false,
+      username_1: '',
+      username_2: '',
       player_1_t: 6,
       player_1_o: 6,
       player_2_t: 6,
@@ -151,22 +153,28 @@ class AppModel
 
   # A league game is a game that is recorded in the league table
   def start_league_game(username_1, username_2)
-    @state[:player_1_username] = username_1
-    @state[:player_2_username] = username_2
+    @state[:username_1] = username_1
+    @state[:username_2] = username_2
     update_game_phase(IN_PROGRESS)
     # TODO: Implement
   end
 
   def host_game(username, game_code)
-    @state[:player_1_username] = username
+    @state[:hosting] = true
+    @state[:username_1] = username
     response = Net::HTTP.get_response(URI(@server_address + "host_game/#{username}/#{game_code}"))
     puts(JSON.parse(response.body))
     # TODO: Implement
   end
 
   def join_game(username, game_code)
-    @state[:player_2_username] = username
+    @state[:username_2] = username
     # TODO: Implement
+  end
+
+  def view_leaderboard
+    response = Net::HTTP.get_response(URI(@server_address + 'leaderboard'))
+    p(JSON.parse(response.body))
   end
 
   def back_to_main_menu
@@ -191,6 +199,29 @@ class AppModel
 
     if result != NO_RESULT_YET
       @state[:result] = result
+
+      if @state[:mode] == PLAYER_PLAYER_LOCAL || (@state[:mode] == PLAYER_PLAYER_DISTRIBUTED && @state[:hosting])
+        if @state[:result] == TIE
+          Net::HTTP.post(
+            URI(@server_address + "game_over/tie?user1=#{@state[:username_1]}&user2=#{@state[:username_2]}"),
+            @state.to_json,
+            'Content-Type' => 'application/json'
+          )
+        elsif @state[:result] == PLAYER_1_WINS
+          Net::HTTP.post(
+            URI(@server_address + "game_over/win?winner=#{@state[:username_1]}&loser=#{@state[:username_2]}"),
+            @state.to_json,
+            'Content-Type' => 'application/json'
+          )
+        elsif @state[:result] == PLAYER_2_WINS
+          Net::HTTP.post(
+            URI(@server_address + "game_over/win?winner=#{@state[:username_2]}&loser=#{@state[:username_1]}"),
+            @state.to_json,
+            'Content-Type' => 'application/json'
+          )
+        end
+      end
+
       update_game_phase(GAME_OVER)
     elsif @state[:turn] == PLAYER_1_TURN && token_played
       update_turn(PLAYER_2_TURN)

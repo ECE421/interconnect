@@ -18,6 +18,8 @@ class MainMenuPresenter
       @model.host_game(data[0], data[1])
     when 'join_game'
       @model.join_game(data[0], data[1])
+    when 'view_leaderboard'
+      @model.view_leaderboard
     else
       raise(ArgumentError)
     end

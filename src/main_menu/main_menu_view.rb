@@ -128,6 +128,13 @@ class MainMenuView
       layout.add(start_game_button)
     end
 
+    view_leaderboard_button = Gtk::Button.new(label: 'View Leaderboard')
+    view_leaderboard_button.signal_connect('clicked') do |_, _|
+      changed
+      notify_observers('view_leaderboard')
+    end
+    layout.add(view_leaderboard_button)
+
     @window.add(layout)
     @window.show_all
   end
