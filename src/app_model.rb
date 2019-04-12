@@ -435,32 +435,16 @@ class AppModel
 
   def connect_4_horizontal?
     @state[:board_data].each do |row|
-      chain = 0
-      row.each do |element|
-        if element != @state[:turn]
-          chain = 0
-          next
-        end
-
-        chain += 1
-        return true if chain == 4
-      end
+      row_string = row.map { |elem| elem.to_s }.join
+      return true if row_string.include?("#{@state[:turn]}" * 4)
     end
     false
   end
 
   def connect_4_vertical?
     Matrix[*@state[:board_data]].column_vectors.each do |column|
-      chain = 0
-      column.each do |element|
-        if element != @state[:turn]
-          chain = 0
-          next
-        end
-
-        chain += 1
-        return true if chain == 4
-      end
+      column_string = column.to_a.map { |elem| elem.to_s }.join
+      return true if column_string.include?("#{@state[:turn]}" * 4)
     end
     false
   end
@@ -482,16 +466,8 @@ class AppModel
         j += 1
       end
 
-      chain = 0
-      left_diagonal.each do |element|
-        if element != @state[:turn]
-          chain = 0
-          next
-        end
-
-        chain += 1
-        return true if chain == 4
-      end
+      left_diagonal_string = left_diagonal.map { |elem| elem.to_s }.join
+      return true if left_diagonal_string.include?("#{@state[:turn]}" * 4)
     end
     false
   end
@@ -509,16 +485,8 @@ class AppModel
         j -= 1
       end
 
-      chain = 0
-      right_diagonal.each do |element|
-        if element != @state[:turn]
-          chain = 0
-          next
-        end
-
-        chain += 1
-        return true if chain == 4
-      end
+      right_diagonal_string = right_diagonal.map { |elem| elem.to_s }.join
+      return true if right_diagonal_string.include?("#{@state[:turn]}" * 4)
     end
     false
   end
