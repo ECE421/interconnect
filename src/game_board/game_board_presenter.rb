@@ -18,7 +18,7 @@ class GameBoardPresenter
     when 'cpu_turn'
       @model.cpu_turn
     when 'try_update_turn'
-      @model.update_turn
+      @model.try_update_turn
     else
       raise(ArgumentError)
     end

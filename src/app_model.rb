@@ -64,8 +64,8 @@ class AppModel
       board_data: Array.new(6) { Array.new(7, 0) },
       result: NO_RESULT_YET,
       hosting: false,
-      username_1: '',
-      username_2: '',
+      username_1: nil,
+      username_2: nil,
       player_1_t: 6,
       player_1_o: 6,
       player_2_t: 6,
@@ -104,10 +104,22 @@ class AppModel
     end
   end
 
+  def try_update_turn
+    response = Net::HTTP.get_response(URI(@server_address + "game?_id=#{@state[:_id]}"))
+    new_state = eval(response.body)
+    @state = Hash[new_state.map{ |k, v| [k.to_sym, v] }]
+    if @state[:turn] == @my_turn
+      update_turn(@my_turn)
+    else
+      update_turn(@state[:turn])
+    end
+  end
+
   def update_turn(turn)
     if @state[:mode] == PLAYER_PLAYER_DISTRIBUTED
       response = Net::HTTP.get_response(URI(@server_address + "game?_id=#{@state[:_id]}"))
-      puts(response.body)
+      new_state = eval(response.body)
+      @state = Hash[new_state.map{ |k, v| [k.to_sym, v] }]
     else
       @state[:turn] = turn
 
@@ -122,10 +134,10 @@ class AppModel
       elsif @state[:turn] == PLAYER_2_TURN && @state[:mode] == CPU_PLAYER
         @state[:player_turn] = true
       end
-
-      changed
-      notify_observers('turn_updated', @state, @my_turn)
     end
+
+    changed
+    notify_observers('turn_updated', @state, @my_turn)
   end
 
   def update_game_type(type)
@@ -203,7 +215,9 @@ class AppModel
       changed
       notify_observers('error', @state)
     else
-      puts(response.body)
+      new_state = eval(response.body)
+      @state = Hash[new_state.map{ |k, v| [k.to_sym, v] }]
+      update_game_phase(IN_PROGRESS)
     end
   end
 
@@ -233,6 +247,11 @@ class AppModel
   def place_token(column_index)
     return if @state[:phase] == GAME_OVER
 
+    if @state[:mode] == PLAYER_PLAYER_DISTRIBUTED && @state[:turn] != @my_turn
+      update_turn(@state[:turn])
+      return
+    end
+
     token_played = board_place_token(column_index)
 
     result = game_result
@@ -240,32 +259,33 @@ class AppModel
     if result != NO_RESULT_YET
       @state[:result] = result
 
-      if @state[:mode] == PLAYER_PLAYER_LOCAL || (@state[:mode] == PLAYER_PLAYER_DISTRIBUTED && @state[:hosting])
+      if @state[:mode] == PLAYER_PLAYER_LOCAL || @state[:mode] == PLAYER_PLAYER_DISTRIBUTED
         if @state[:result] == TIE
-          Net::HTTP.post(
-            URI(@server_address + "game_over/tie?user1=#{@state[:username_1]}&user2=#{@state[:username_2]}"),
-            @state.to_json,
-            'Content-Type' => 'application/json'
-          )
+          uri = @server_address + "game_over/tie?user1=#{@state[:username_1]}&user2=#{@state[:username_2]}"
+          Net::HTTP.post(URI(uri), @state.to_json, 'Content-Type' => 'application/json')
         elsif @state[:result] == PLAYER_1_WINS
-          Net::HTTP.post(
-            URI(@server_address + "game_over/win?winner=#{@state[:username_1]}&loser=#{@state[:username_2]}"),
-            @state.to_json,
-            'Content-Type' => 'application/json'
-          )
+          uri = @server_address + "game_over/win?winner=#{@state[:username_1]}&loser=#{@state[:username_2]}"
+          Net::HTTP.post(URI(uri), @state.to_json, 'Content-Type' => 'application/json')
         elsif @state[:result] == PLAYER_2_WINS
-          Net::HTTP.post(
-            URI(@server_address + "game_over/win?winner=#{@state[:username_2]}&loser=#{@state[:username_1]}"),
-            @state.to_json,
-            'Content-Type' => 'application/json'
-          )
+          uri = @server_address + "game_over/win?winner=#{@state[:username_2]}&loser=#{@state[:username_1]}"
+          Net::HTTP.post(URI(uri), @state.to_json, 'Content-Type' => 'application/json')
         end
       end
 
       update_game_phase(GAME_OVER)
     elsif @state[:turn] == PLAYER_1_TURN && token_played
+      if @state[:mode] == PLAYER_PLAYER_DISTRIBUTED
+        @state[:turn] = PLAYER_2_TURN
+        Net::HTTP.post(URI(@server_address + 'turn'), @state.to_json, 'Content-Type' => 'application/json')
+      end
+
       update_turn(PLAYER_2_TURN)
     elsif @state[:turn] == PLAYER_2_TURN && token_played
+      if @state[:mode] == PLAYER_PLAYER_DISTRIBUTED
+        @state[:turn] = PLAYER_1_TURN
+        Net::HTTP.post(URI(@server_address + 'turn'), @state.to_json, 'Content-Type' => 'application/json')
+      end
+
       update_turn(PLAYER_1_TURN)
     elsif !token_played
       update_turn(@state[:turn]) # Column was full, try again
@@ -390,12 +410,14 @@ class AppModel
   def connect_4_game_result
     return @state[:turn] if connect_4_horizontal? || connect_4_vertical? || connect_4_diagonal?
 
-    return TIE if connect_4_tie?
+    return TIE if board_full?
 
     NO_RESULT_YET
   end
 
   def toot_and_otto_game_result
+    return TIE if board_full?
+
     horizontal_result = toot_and_otto_horizontal
     return horizontal_result if horizontal_result == TIE
 
@@ -424,11 +446,9 @@ class AppModel
     end
   end
 
-  def connect_4_tie?
+  def board_full?
     @state[:board_data].each do |row|
-      row.each do |element|
-        return false if element.zero?
-      end
+      return false if row.include?(0)
     end
     true
   end

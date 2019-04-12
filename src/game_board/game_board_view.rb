@@ -4,7 +4,7 @@ require 'observer'
 class GameBoardView
   include Observable
 
-  # This method sets up all unchanging (non--based) properties of the game board
+  # This method sets up all unchanging (non-state-based) properties of the game board
   def initialize(window)
     @window = window # Reference to the application window
 
@@ -52,7 +52,7 @@ class GameBoardView
     @layout.add(@fixed_layout)
 
     cell_grid = Gtk::Grid.new
-    @fixed_layout.put(cell_grid, 0, 40)
+    @fixed_layout.put(cell_grid, 0, 0)
 
     (0..(state[:board_columns] - 1)).each do |col|
       (0..(state[:board_rows] - 1)).each do |row|
@@ -64,7 +64,7 @@ class GameBoardView
     end
 
     column_grid = Gtk::Grid.new
-    @fixed_layout.put(column_grid, 0, 40)
+    @fixed_layout.put(column_grid, 0, 0)
 
     (0..(state[:board_columns] - 1)).each do |column_index|
       column = Gtk::Button.new
@@ -159,20 +159,20 @@ class GameBoardView
       @layout.add(@main_menu_button)
     end
 
-    if state[:mode] == AppModel::PLAYER_PLAYER_DISTRIBUTED && state[:turn] != my_turn
-      mask = Gtk::Button.new(label: 'Please wait for your turn...')
-      mask.set_size_request(100 * state[:board_columns], 100 * state[:board_rows])
-      mask.style_context.add_provider(@mask_style, Gtk::StyleProvider::PRIORITY_USER)
-      @fixed_layout.put(mask, 0, 0)
-    end
+    # puts(state[:mode], state[:turn], my_turn)
+    # if state[:mode] == AppModel::PLAYER_PLAYER_DISTRIBUTED && state[:turn] != my_turn
+    #   mask = Gtk::Button.new(label: 'Please wait for your turn...')
+    #   mask.set_size_request(100 * state[:board_columns], 100 * state[:board_rows])
+    #   mask.style_context.add_provider(@mask_style, Gtk::StyleProvider::PRIORITY_USER)
+    #   @fixed_layout.put(mask, 0, 0)
+    # end
 
     @window.show_all
 
-    if state[:mode] == AppModel::PLAYER_PLAYER_DISTRIBUTED && state[:turn] != my_turn
-      sleep(1)
-      changed
-      notify_observers('try_update_turn')
-    end
+    # if state[:mode] == AppModel::PLAYER_PLAYER_DISTRIBUTED && state[:turn] != my_turn
+    #   changed
+    #   notify_observers('try_update_turn')
+    # end
 
     unless state[:player_turn]
       changed
