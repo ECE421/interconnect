@@ -13,16 +13,20 @@ class LeaderboardView
     grid = Gtk::Grid.new
     grid.set_column_homogeneous(true)
 
-    username_header = Gtk::Label.new('Username')
+    username_header = Gtk::Label.new
+    username_header.set_markup('<b>Username</b>')
     grid.attach(username_header, 0, 0, 1, 1)
 
-    wins_header = Gtk::Label.new('Wins')
+    wins_header = Gtk::Label.new
+    wins_header.set_markup('<b>Wins</b>')
     grid.attach(wins_header, 1, 0, 1, 1)
 
-    losses_header = Gtk::Label.new('Losses')
+    losses_header = Gtk::Label.new
+    losses_header.set_markup('<b>Losses</b>')
     grid.attach(losses_header, 2, 0, 1, 1)
 
-    ties_header = Gtk::Label.new('Ties')
+    ties_header = Gtk::Label.new
+    ties_header.set_markup('<b>Ties</b>')
     grid.attach(ties_header, 3, 0, 1, 1)
 
     leaderboard.each_with_index do |row, i|

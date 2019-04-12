@@ -78,7 +78,7 @@ class MainMenuView
       horizontal_separator = Gtk::Separator.new(:horizontal)
       layout.add(horizontal_separator)
 
-      start_game_button = Gtk::Button.new(label: 'Start League Game')
+      start_game_button = Gtk::Button.new(label: 'Start Game')
       start_game_button.signal_connect('clicked') do |_, _|
         changed
         notify_observers('start_league_game', player_1_username_entry.text, player_2_username_entry.text)
