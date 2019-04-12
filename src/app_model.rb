@@ -174,7 +174,8 @@ class AppModel
 
   def view_leaderboard
     response = Net::HTTP.get_response(URI(@server_address + 'leaderboard'))
-    p(JSON.parse(response.body))
+    changed
+    notify_observers('view_leaderboard', JSON.parse(response.body))
   end
 
   def back_to_main_menu

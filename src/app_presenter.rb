@@ -1,6 +1,8 @@
 require_relative 'game_board/cli_game_board_view'
 require_relative 'game_board/game_board_presenter'
 require_relative 'game_board/game_board_view'
+require_relative 'leaderboard/leaderboard_presenter'
+require_relative 'leaderboard/leaderboard_view'
 require_relative 'main_menu/cli_main_menu_view'
 require_relative 'main_menu/main_menu_presenter'
 require_relative 'main_menu/main_menu_view'
@@ -25,6 +27,8 @@ class AppPresenter
       redraw_main_menu(data[0])
     when 'game_mode_updated'
       redraw_main_menu(data[0])
+    when 'view_leaderboard'
+      view_leaderboard(data[0])
     else
       raise(ArgumentError)
     end
@@ -39,6 +43,10 @@ class AppPresenter
 
     if state[:interface] == AppModel::GUI
       @main_menu_view = MainMenuView.new(@window)
+
+      @leaderboard_view = LeaderboardView.new(@window)
+      @leaderboard_presenter = LeaderboardPresenter.new(@model)
+      @leaderboard_view.add_observer(@leaderboard_presenter)
 
       @game_board_view = GameBoardView.new(@window)
     elsif state[:interface] == AppModel::CLI
@@ -74,5 +82,10 @@ class AppPresenter
 
     @window.each { |child| @window.remove(child) }
     @main_menu_view.draw(state)
+  end
+
+  def view_leaderboard(leaderboard)
+    @window.each { |child| @window.remove(child) }
+    @leaderboard_view.draw(leaderboard)
   end
 end
