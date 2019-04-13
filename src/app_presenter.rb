@@ -1,6 +1,8 @@
 require_relative 'game_board/cli_game_board_view'
 require_relative 'game_board/game_board_presenter'
 require_relative 'game_board/game_board_view'
+require_relative 'game_list/game_list_presenter'
+require_relative 'game_list/game_list_view'
 require_relative 'leaderboard/leaderboard_presenter'
 require_relative 'leaderboard/leaderboard_view'
 require_relative 'main_menu/cli_main_menu_view'
@@ -29,6 +31,8 @@ class AppPresenter
       redraw_main_menu(data[0])
     when 'view_leaderboard'
       view_leaderboard(data[0])
+    when 'view_available_games'
+      view_available_games(data[0])
     when 'error'
       redraw_main_menu(data[0])
     else
@@ -45,6 +49,10 @@ class AppPresenter
 
     if state[:interface] == AppModel::GUI
       @main_menu_view = MainMenuView.new(@window)
+
+      @game_list_view = GameListView.new(@window)
+      @game_list_presenter = GameListPresenter.new(@model)
+      @game_list_view.add_observer(@game_list_presenter)
 
       @leaderboard_view = LeaderboardView.new(@window)
       @leaderboard_presenter = LeaderboardPresenter.new(@model)
@@ -88,5 +96,10 @@ class AppPresenter
   def view_leaderboard(leaderboard)
     @window.each { |child| @window.remove(child) }
     @leaderboard_view.draw(leaderboard)
+  end
+
+  def view_available_games(available_games)
+    @window.each { |child| @window.remove(child) }
+    @game_list_view.draw(available_games)
   end
 end

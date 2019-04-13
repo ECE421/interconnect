@@ -233,6 +233,12 @@ class AppModel
     notify_observers('view_leaderboard', JSON.parse(response.body))
   end
 
+  def view_available_games
+    response = Net::HTTP.get_response(URI(@server_address + 'available_games'))
+    changed
+    notify_observers('view_available_games', JSON.parse(response.body))
+  end
+
   def back_to_main_menu
     @state[:turn] = PLAYER_1_TURN
     @state[:_id] = nil

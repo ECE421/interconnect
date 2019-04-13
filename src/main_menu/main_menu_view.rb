@@ -146,6 +146,13 @@ class MainMenuView
       layout.add(start_game_button)
     end
 
+    view_available_games_button  = Gtk::Button.new(label: 'View Available Games')
+    view_available_games_button.signal_connect('clicked') do |_, _|
+      changed
+      notify_observers('view_available_games')
+    end
+    layout.add(view_available_games_button)
+
     view_leaderboard_button = Gtk::Button.new(label: 'View Leaderboard')
     view_leaderboard_button.signal_connect('clicked') do |_, _|
       changed
