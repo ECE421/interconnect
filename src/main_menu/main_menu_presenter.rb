@@ -13,7 +13,7 @@ class MainMenuPresenter
     when 'start_game'
       @model.start_game
     when 'start_league_game'
-      @model.start_league_game(data[0], data[1])
+      @model.start_league_game(data[0], data[1], data[2])
     when 'host_game'
       @model.host_game(data[0], data[1])
     when 'join_game'

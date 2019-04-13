@@ -75,18 +75,23 @@ class MainMenuView
       player_2_username_box.set_child_packing(player_2_username_entry, :expand => true)
       layout.add(player_2_username_box)
 
+      game_code_label = Gtk::Label.new('Game code:')
+      layout.add(game_code_label)
+      game_code_entry = Gtk::Entry.new
+      layout.add(game_code_entry)
+
       horizontal_separator = Gtk::Separator.new(:horizontal)
       layout.add(horizontal_separator)
-
-      # TODO: Game code entry
-      # TODO: Load game button
 
       start_game_button = Gtk::Button.new(label: 'Start Game')
       start_game_button.signal_connect('clicked') do |_, _|
         changed
-        notify_observers('start_league_game', player_1_username_entry.text, player_2_username_entry.text)
+        notify_observers('start_league_game', player_1_username_entry.text, player_2_username_entry.text, game_code_entry.text)
       end
       layout.add(start_game_button)
+
+      horizontal_separator = Gtk::Separator.new(:horizontal)
+      layout.add(horizontal_separator)
     elsif mode == AppModel::PLAYER_PLAYER_DISTRIBUTED
       layout.add(player_1_label)
       player_1_username_box = Gtk::Box.new(:horizontal, 10)

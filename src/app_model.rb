@@ -99,8 +99,9 @@ class AppModel
   end
 
   def update_turn(turn)
-    if @state[:mode] == PLAYER_PLAYER_DISTRIBUTED
-      response = Net::HTTP.get_response(URI(@server_address + "game?_id=#{@state[:_id]}"))
+    if @state[:mode] == PLAYER_PLAYER_LOCAL || @state[:mode] == PLAYER_PLAYER_DISTRIBUTED
+      query_string = "game?_id=#{@state[:_id]}&username_1=#{@state[:username_1]}&username_2=#{@state[:username_2]}"
+      response = Net::HTTP.get_response(URI(@server_address + query_string))
       new_state = eval(response.body)
       @state = Hash[new_state.map{ |k, v| [k.to_sym, v] }]
     else
@@ -158,10 +159,29 @@ class AppModel
   end
 
   # A league game is a game that is recorded in the league table
-  def start_league_game(username_1, username_2)
+  def start_league_game(username_1, username_2, game_code)
+    @state[:_id] = game_code
     @state[:username_1] = username_1
     @state[:username_2] = username_2
-    update_game_phase(IN_PROGRESS)
+
+    uri = URI(@server_address + 'create_game')
+    response = Net::HTTP.post(uri, @state.to_json, 'Content-Type' => 'application/json')
+
+    if response.body == 'Success'
+      update_game_phase(IN_PROGRESS)
+    else # Load game
+      query_string = "game?_id=#{@state[:_id]}&username_1=#{@state[:username_1]}&username_2=#{@state[:username_2]}"
+      response = Net::HTTP.get_response(URI(@server_address + query_string))
+      if response.body.start_with?('Failure')
+        @state[:error_message] = response.body
+        changed
+        notify_observers('error', @state)
+      else
+        new_state = eval(response.body)
+        @state = Hash[new_state.map{ |k, v| [k.to_sym, v] }]
+        update_game_phase(IN_PROGRESS)
+      end
+    end
   end
 
   def host_game(username, game_code)
@@ -257,14 +277,14 @@ class AppModel
 
       update_game_phase(GAME_OVER)
     elsif @state[:turn] == PLAYER_1_TURN && token_played
-      if @state[:mode] == PLAYER_PLAYER_DISTRIBUTED
+      if @state[:mode] == PLAYER_PLAYER_LOCAL || @state[:mode] == PLAYER_PLAYER_DISTRIBUTED
         @state[:turn] = PLAYER_2_TURN
         Net::HTTP.post(URI(@server_address + 'turn'), @state.to_json, 'Content-Type' => 'application/json')
       end
 
       update_turn(PLAYER_2_TURN)
     elsif @state[:turn] == PLAYER_2_TURN && token_played
-      if @state[:mode] == PLAYER_PLAYER_DISTRIBUTED
+      if @state[:mode] == PLAYER_PLAYER_LOCAL || @state[:mode] == PLAYER_PLAYER_DISTRIBUTED
         @state[:turn] = PLAYER_1_TURN
         Net::HTTP.post(URI(@server_address + 'turn'), @state.to_json, 'Content-Type' => 'application/json')
       end
