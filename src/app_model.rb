@@ -149,6 +149,9 @@ class AppModel
 
   def update_active_token(token)
     @state[:active_token] = token
+    if @state[:mode] == PLAYER_PLAYER_LOCAL || @state[:mode] == PLAYER_PLAYER_DISTRIBUTED
+      Net::HTTP.post(URI(@server_address + 'turn'), @state.to_json, 'Content-Type' => 'application/json')
+    end
     update_turn(@state[:turn])
   end
 
