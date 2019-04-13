@@ -58,7 +58,6 @@ class AppModel
       phase: MENU,
       board_data: Array.new(6) { Array.new(7, 0) },
       result: NO_RESULT_YET,
-      hosting: false,
       username_1: nil,
       username_2: nil,
       player_1_t: 6,
@@ -185,7 +184,6 @@ class AppModel
   end
 
   def host_game(username, game_code)
-    @state[:hosting] = true
     @state[:username_1] = username
     @state[:_id] = game_code
     @my_turn = PLAYER_1_TURN
