@@ -244,6 +244,13 @@ class AppModel
     @state[:_id] = nil
     @state[:username_1] = nil
     @state[:username_2] = nil
+    @state[:player_1_t] = 6
+    @state[:player_1_o] = 6
+    @state[:player_2_t] = 6
+    @state[:player_2_o] = 6
+    @state[:player_turn]= true
+    @state[:active_token] = TOKEN_T
+    @state[:error_message] = ''
     @state[:board_data] = Array.new(@state[:board_rows]) { Array.new(@state[:board_columns], 0) }
     @state[:result] = NO_RESULT_YET
     update_game_phase(MENU)
