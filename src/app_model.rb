@@ -322,7 +322,7 @@ class AppModel
 
   # CPU plays a turn
   def cpu_turn
-    cpu_random
+    cpu_progress unless cpu_attempt || cpu_prevent
   end
 
   # cpu_attempt works to try to win the game by placing a token in each column once and checking to see if any result in
@@ -331,8 +331,8 @@ class AppModel
     (0..(@state[:board_columns] - 1)).each do |c|
       token_placed = board_place_token(c)
       if game_result != NO_RESULT_YET # full send
-        @state[:result] = game_result
-        update_game_phase(GAME_OVER)
+        board_remove_token(c)
+        place_token(c)
         return true
       elsif token_placed # make sure token was placed before force delete
         board_remove_token(c)
@@ -352,7 +352,7 @@ class AppModel
       if game_result != NO_RESULT_YET
         board_remove_token(c) # remove the winning move
         @state[:turn] = current_turn # change back
-        board_place_token(c) # place token to block
+        place_token(c) # place token to block
         return true
       elsif token_placed # make sure token was placed before force delete
         board_remove_token(c)
@@ -369,13 +369,14 @@ class AppModel
     (0..3).each do |_|
       (0..(@state[:board_columns] - 1)).each do |c|
         token_placed = board_place_token(c)
+        remove_array.push(c) if token_placed # add move for later deletion
         if game_result != NO_RESULT_YET
           remove_array.reverse_each do |r| # remove moves from our array 'stack'
             board_remove_token(r)
           end
+          place_token(c)
           return true
         end
-        remove_array.push(c) if token_placed # add move for later deletion
       end
     end
   end
