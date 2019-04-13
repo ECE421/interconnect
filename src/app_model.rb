@@ -44,11 +44,6 @@ class AppModel
   TOKEN_T = 1
   TOKEN_O = 2
 
-  # CPU Difficulty (percentage chance of playing random)
-  EASY = 0.75
-  MEDIUM = 0.25
-  HARD = 0
-
   def initialize(app, presenter, interface = GUI)
     @server_address = 'https://interconnect4-server.herokuapp.com/'
 
@@ -73,7 +68,6 @@ class AppModel
       board_columns: 7,
       board_rows: 6,
       active_token: TOKEN_T,
-      cpu_difficulty: EASY,
       error_message: ''
     }
 
