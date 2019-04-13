@@ -99,8 +99,7 @@ class AppModel
 
   def update_turn(turn)
     if @state[:mode] == PLAYER_PLAYER_LOCAL || @state[:mode] == PLAYER_PLAYER_DISTRIBUTED
-      query_string = "game?_id=#{@state[:_id]}&username_1=#{@state[:username_1]}&username_2=#{@state[:username_2]}"
-      response = Net::HTTP.get_response(URI(@server_address + query_string))
+      response = Net::HTTP.get_response(URI(@server_address + "game?_id=#{@state[:_id]}"))
       new_state = eval(response.body)
       @state = Hash[new_state.map{ |k, v| [k.to_sym, v] }]
     else
@@ -169,7 +168,7 @@ class AppModel
     if response.body == 'Success'
       update_game_phase(IN_PROGRESS)
     else # Load game
-      query_string = "game?_id=#{@state[:_id]}&username_1=#{@state[:username_1]}&username_2=#{@state[:username_2]}"
+      query_string = "load_game?_id=#{@state[:_id]}&username=#{@state[:username_1]}"
       response = Net::HTTP.get_response(URI(@server_address + query_string))
       if response.body.start_with?('Failure')
         @state[:error_message] = response.body
@@ -194,9 +193,17 @@ class AppModel
     if response.body == 'Success'
       update_game_phase(IN_PROGRESS)
     else
-      @state[:error_message] = response.body
-      changed
-      notify_observers('error', @state)
+      query_string = "load_game?_id=#{game_code}&username=#{username}"
+      response = Net::HTTP.get_response(URI(@server_address + query_string))
+      if response.body.start_with?('Failure')
+        @state[:error_message] = response.body
+        changed
+        notify_observers('error', @state)
+      else
+        new_state = eval(response.body)
+        @state = Hash[new_state.map{ |k, v| [k.to_sym, v] }]
+        update_game_phase(IN_PROGRESS)
+      end
     end
   end
 

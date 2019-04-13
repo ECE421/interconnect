@@ -89,11 +89,7 @@ class MainMenuView
         notify_observers('start_league_game', player_1_username_entry.text, player_2_username_entry.text, game_code_entry.text)
       end
       layout.add(start_game_button)
-
-      horizontal_separator = Gtk::Separator.new(:horizontal)
-      layout.add(horizontal_separator)
     elsif mode == AppModel::PLAYER_PLAYER_DISTRIBUTED
-      layout.add(player_1_label)
       player_1_username_box = Gtk::Box.new(:horizontal, 10)
       player_1_username_box.add(player_1_username_label)
       player_1_username_box.add(player_1_username_entry)
