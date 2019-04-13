@@ -108,6 +108,10 @@ class GameBoardView
       @layout.add(@token_button_box)
     end
 
+    @mask = Gtk::Button.new(label: 'Please wait for your turn...')
+    @mask.set_size_request(100 * state[:board_columns], 100 * state[:board_rows])
+    @mask.style_context.add_provider(@mask_style, Gtk::StyleProvider::PRIORITY_USER)
+
     @window.add(@layout)
   end
 
@@ -159,20 +163,25 @@ class GameBoardView
       @layout.add(@main_menu_button)
     end
 
-    # puts(state[:mode], state[:turn], my_turn)
-    # if state[:mode] == AppModel::PLAYER_PLAYER_DISTRIBUTED && state[:turn] != my_turn
-    #   mask = Gtk::Button.new(label: 'Please wait for your turn...')
-    #   mask.set_size_request(100 * state[:board_columns], 100 * state[:board_rows])
-    #   mask.style_context.add_provider(@mask_style, Gtk::StyleProvider::PRIORITY_USER)
-    #   @fixed_layout.put(mask, 0, 0)
-    # end
+    if state[:mode] == AppModel::PLAYER_PLAYER_DISTRIBUTED && state[:turn] != my_turn
+      @fixed_layout.put(@mask, 0, 0)
+
+      Thread.new do
+        while true
+          sleep(5)
+          response = Net::HTTP.get_response(URI('https://interconnect4-server.herokuapp.com/' + "game?_id=#{state[:_id]}"))
+          new_state = eval(response.body)
+          state = Hash[new_state.map{ |k, v| [k.to_sym, v] }]
+          break if state[:turn] == my_turn
+        end
+        changed
+        notify_observers('update_turn', state[:turn])
+      end
+    else
+      @fixed_layout.remove(@mask)
+    end
 
     @window.show_all
-
-    # if state[:mode] == AppModel::PLAYER_PLAYER_DISTRIBUTED && state[:turn] != my_turn
-    #   changed
-    #   notify_observers('try_update_turn')
-    # end
 
     unless state[:player_turn]
       changed

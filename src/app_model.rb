@@ -104,17 +104,6 @@ class AppModel
     end
   end
 
-  def try_update_turn
-    response = Net::HTTP.get_response(URI(@server_address + "game?_id=#{@state[:_id]}"))
-    new_state = eval(response.body)
-    @state = Hash[new_state.map{ |k, v| [k.to_sym, v] }]
-    if @state[:turn] == @my_turn
-      update_turn(@my_turn)
-    else
-      update_turn(@state[:turn])
-    end
-  end
-
   def update_turn(turn)
     if @state[:mode] == PLAYER_PLAYER_DISTRIBUTED
       response = Net::HTTP.get_response(URI(@server_address + "game?_id=#{@state[:_id]}"))
