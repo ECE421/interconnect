@@ -34,10 +34,10 @@ class MainMenuView
 
     game_mode_combo_box = Gtk::ComboBoxText.new
     game_mode_combo_box.append_text('Player vs. Player (Local)')
-    game_mode_combo_box.append_text('Player vs. Player (Distributed)')
     game_mode_combo_box.append_text('Player vs. CPU (Local)')
     game_mode_combo_box.append_text('CPU vs. Player (Local)')
     game_mode_combo_box.append_text('CPU vs. CPU (Local)')
+    game_mode_combo_box.append_text('Player vs. Player (Distributed)')
 
     game_mode_combo_box.set_active(mode)
     game_mode_combo_box.signal_connect('changed') do |_, _|

@@ -24,10 +24,10 @@ class AppModel
 
   # Game modes
   PLAYER_PLAYER_LOCAL = 0
-  PLAYER_PLAYER_DISTRIBUTED = 1
-  PLAYER_CPU = 2
-  CPU_PLAYER = 3
-  CPU_CPU = 4
+  PLAYER_CPU = 1
+  CPU_PLAYER = 2
+  CPU_CPU = 3
+  PLAYER_PLAYER_DISTRIBUTED = 4
 
   # Game phases
   MENU = 0
@@ -251,7 +251,7 @@ class AppModel
     @state[:player_1_o] = 6
     @state[:player_2_t] = 6
     @state[:player_2_o] = 6
-    @state[:player_turn]= true
+    @state[:player_turn] = (@state[:mode] != CPU_PLAYER && @state[:mode] != CPU_CPU)
     @state[:active_token] = TOKEN_T
     @state[:error_message] = ''
     @state[:board_data] = Array.new(@state[:board_rows]) { Array.new(@state[:board_columns], 0) }

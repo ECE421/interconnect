@@ -27,7 +27,7 @@ class CLIGameBoardView
     end
   end
 
-  def draw(state)
+  def draw(state, _my_turn)
     (0..(state[:board_columns] - 1)).each do |col|
       (0..(state[:board_rows] - 1)).each do |row|
         if (state[:board_data][row][col]).zero?
@@ -56,6 +56,7 @@ class CLIGameBoardView
       exit
     end
 
+    puts(state[:player_turn])
     if state[:player_turn]
       valid_input = false
       until valid_input
