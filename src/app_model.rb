@@ -167,18 +167,30 @@ class AppModel
 
     if response.body == 'Success'
       update_game_phase(IN_PROGRESS)
-    else # Load game
-      query_string = "load_game?_id=#{@state[:_id]}&username=#{@state[:username_1]}"
-      response = Net::HTTP.get_response(URI(@server_address + query_string))
-      if response.body.start_with?('Failure')
-        @state[:error_message] = response.body
-        changed
-        notify_observers('error', @state)
-      else
-        new_state = eval(response.body)
-        @state = Hash[new_state.map{ |k, v| [k.to_sym, v] }]
-        update_game_phase(IN_PROGRESS)
+    else
+      new_state = eval(response.body)
+      @state = Hash[new_state.map{ |k, v| [k.to_sym, v] }]
+      update_game_phase(IN_PROGRESS)
+    end
+  end
+
+  def load_game(username, game_code)
+    query_string = "game?_id=#{game_code}"
+    response = Net::HTTP.get_response(URI(@server_address + query_string))
+    if response.body.start_with?('Failure')
+      @state[:error_message] = response.body
+      changed
+      notify_observers('error', @state)
+    else
+      new_state = eval(response.body)
+      @state = Hash[new_state.map{ |k, v| [k.to_sym, v] }]
+      if username == @state[:username_1]
+        @my_turn = PLAYER_1_TURN
+      elsif username == @state[:username_2]
+        @my_turn = PLAYER_2_TURN
       end
+
+      update_game_phase(IN_PROGRESS)
     end
   end
 
@@ -193,23 +205,15 @@ class AppModel
     if response.body == 'Success'
       update_game_phase(IN_PROGRESS)
     else
-      query_string = "load_game?_id=#{game_code}&username=#{username}"
-      response = Net::HTTP.get_response(URI(@server_address + query_string))
-      if response.body.start_with?('Failure')
-        @state[:error_message] = response.body
-        changed
-        notify_observers('error', @state)
-      else
-        new_state = eval(response.body)
-        @state = Hash[new_state.map{ |k, v| [k.to_sym, v] }]
-        update_game_phase(IN_PROGRESS)
-      end
+      new_state = eval(response.body)
+      @state = Hash[new_state.map{ |k, v| [k.to_sym, v] }]
+      update_game_phase(IN_PROGRESS)
     end
   end
 
   def join_game(username, game_code)
     @my_turn = PLAYER_2_TURN
-    uri = URI(@server_address + "join_game?game_id=#{game_code}&username=#{username}")
+    uri = URI(@server_address + "join_game?_id=#{game_code}&username=#{username}")
     response = Net::HTTP.post(uri, @state.to_json, 'Content-Type' => 'application/json')
 
     if response.body.start_with?('Failure')
@@ -231,6 +235,9 @@ class AppModel
 
   def back_to_main_menu
     @state[:turn] = PLAYER_1_TURN
+    @state[:_id] = nil
+    @state[:username_1] = nil
+    @state[:username_2] = nil
     @state[:board_data] = Array.new(@state[:board_rows]) { Array.new(@state[:board_columns], 0) }
     @state[:result] = NO_RESULT_YET
     update_game_phase(MENU)

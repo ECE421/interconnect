@@ -83,12 +83,19 @@ class MainMenuView
       horizontal_separator = Gtk::Separator.new(:horizontal)
       layout.add(horizontal_separator)
 
-      start_game_button = Gtk::Button.new(label: 'Start Game')
+      start_game_button = Gtk::Button.new(label: 'New Game')
       start_game_button.signal_connect('clicked') do |_, _|
         changed
         notify_observers('start_league_game', player_1_username_entry.text, player_2_username_entry.text, game_code_entry.text)
       end
       layout.add(start_game_button)
+
+      load_game_button = Gtk::Button.new(label: 'Load Game')
+      load_game_button.signal_connect('clicked') do |_, _|
+        changed
+        notify_observers('load_game', player_1_username_entry.text, game_code_entry.text)
+      end
+      layout.add(load_game_button)
     elsif mode == AppModel::PLAYER_PLAYER_DISTRIBUTED
       player_1_username_box = Gtk::Box.new(:horizontal, 10)
       player_1_username_box.add(player_1_username_label)
@@ -123,6 +130,13 @@ class MainMenuView
       game_button_box.add(join_game_button)
       game_button_box.set_child_packing(join_game_button, :expand => true)
       layout.add(game_button_box)
+
+      load_game_button = Gtk::Button.new(label: 'Load Game')
+      load_game_button.signal_connect('clicked') do |_, _|
+        changed
+        notify_observers('load_game', player_1_username_entry.text, game_code_entry.text)
+      end
+      layout.add(load_game_button)
     else
       start_game_button = Gtk::Button.new(label: 'Start Game')
       start_game_button.signal_connect('clicked') do |_, _|

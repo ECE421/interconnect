@@ -20,6 +20,8 @@ class MainMenuPresenter
       @model.join_game(data[0], data[1])
     when 'view_leaderboard'
       @model.view_leaderboard
+    when 'load_game'
+      @model.load_game(data[0], data[1])
     else
       raise(ArgumentError)
     end
