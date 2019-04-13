@@ -163,7 +163,7 @@ class GameBoardView
       @layout.add(@main_menu_button)
     end
 
-    if state[:mode] == AppModel::PLAYER_PLAYER_DISTRIBUTED && state[:turn] != my_turn
+    if state[:mode] == AppModel::PLAYER_PLAYER_DISTRIBUTED && state[:turn] != my_turn && state[:result] == AppModel::NO_RESULT_YET
       @fixed_layout.put(@mask, 0, 0)
 
       Thread.new do
@@ -172,7 +172,7 @@ class GameBoardView
           response = Net::HTTP.get_response(URI('https://interconnect4-server.herokuapp.com/' + "game?_id=#{state[:_id]}"))
           new_state = eval(response.body)
           state = Hash[new_state.map{ |k, v| [k.to_sym, v] }]
-          break if state[:turn] == my_turn
+          break if state[:turn] == my_turn || state[:result] != AppModel::NO_RESULT_YET
         end
         changed
         notify_observers('update_turn', state[:turn])

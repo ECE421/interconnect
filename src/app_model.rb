@@ -176,11 +176,8 @@ class AppModel
     @state[:_id] = game_code
     @my_turn = PLAYER_1_TURN
 
-    response = Net::HTTP.post(
-      URI(@server_address + 'create_game'),
-      @state.to_json,
-      'Content-Type' => 'application/json'
-    )
+    uri = URI(@server_address + 'create_game')
+    response = Net::HTTP.post(uri, @state.to_json, 'Content-Type' => 'application/json')
 
     if response.body == 'Success'
       update_game_phase(IN_PROGRESS)
@@ -193,11 +190,8 @@ class AppModel
 
   def join_game(username, game_code)
     @my_turn = PLAYER_2_TURN
-    response = Net::HTTP.post(
-      URI(@server_address + "join_game?game_id=#{game_code}&username=#{username}"),
-      @state.to_json,
-      'Content-Type' => 'application/json'
-    )
+    uri = URI(@server_address + "join_game?game_id=#{game_code}&username=#{username}")
+    response = Net::HTTP.post(uri, @state.to_json, 'Content-Type' => 'application/json')
 
     if response.body.start_with?('Failure')
       @state[:error_message] = response.body
@@ -247,17 +241,23 @@ class AppModel
 
     if result != NO_RESULT_YET
       @state[:result] = result
+      @state[:phase] = GAME_OVER
 
       if @state[:mode] == PLAYER_PLAYER_LOCAL || @state[:mode] == PLAYER_PLAYER_DISTRIBUTED
-        if @state[:result] == TIE
-          uri = @server_address + "game_over/tie?user1=#{@state[:username_1]}&user2=#{@state[:username_2]}"
-          Net::HTTP.post(URI(uri), @state.to_json, 'Content-Type' => 'application/json')
-        elsif @state[:result] == PLAYER_1_WINS
-          uri = @server_address + "game_over/win?winner=#{@state[:username_1]}&loser=#{@state[:username_2]}"
-          Net::HTTP.post(URI(uri), @state.to_json, 'Content-Type' => 'application/json')
-        elsif @state[:result] == PLAYER_2_WINS
-          uri = @server_address + "game_over/win?winner=#{@state[:username_2]}&loser=#{@state[:username_1]}"
-          Net::HTTP.post(URI(uri), @state.to_json, 'Content-Type' => 'application/json')
+        Net::HTTP.post(URI(@server_address + 'turn'), @state.to_json, 'Content-Type' => 'application/json')
+
+        Thread.new do
+          sleep(10)
+          if @state[:result] == TIE
+            uri = URI(@server_address + "game_over/tie?user1=#{@state[:username_1]}&user2=#{@state[:username_2]}")
+            Net::HTTP.post(uri, @state.to_json, 'Content-Type' => 'application/json')
+          elsif @state[:result] == PLAYER_1_WINS
+            uri = URI(@server_address + "game_over/win?winner=#{@state[:username_1]}&loser=#{@state[:username_2]}")
+            Net::HTTP.post(uri, @state.to_json, 'Content-Type' => 'application/json')
+          elsif @state[:result] == PLAYER_2_WINS
+            uri = URI(@server_address + "game_over/win?winner=#{@state[:username_2]}&loser=#{@state[:username_1]}")
+            Net::HTTP.post(uri, @state.to_json, 'Content-Type' => 'application/json')
+          end
         end
       end
 
