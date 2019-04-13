@@ -168,7 +168,7 @@ class GameBoardView
 
       Thread.new do
         while true
-          sleep(5)
+          sleep(3)
           response = Net::HTTP.get_response(URI('https://interconnect4-server.herokuapp.com/' + "game?_id=#{state[:_id]}"))
           new_state = eval(response.body)
           state = Hash[new_state.map{ |k, v| [k.to_sym, v] }]
