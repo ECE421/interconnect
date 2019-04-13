@@ -322,7 +322,11 @@ class AppModel
 
   # CPU plays a turn
   def cpu_turn
-    cpu_progress unless cpu_attempt || cpu_prevent
+    if @state[:type] == CONNECT_4
+      cpu_progress unless cpu_attempt || cpu_prevent
+    elsif @state[:type] == TOOT_AND_OTTO
+      cpu_random
+    end
   end
 
   # cpu_attempt works to try to win the game by placing a token in each column once and checking to see if any result in
